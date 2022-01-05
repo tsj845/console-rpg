@@ -12,16 +12,6 @@ with open("content.amly") as f:
 # final data list
 datums = []
 
-# entities
-class Entity ():
-    def __init__ (self):
-        pass
-
-# locations
-class Location ():
-    def __init__ (self):
-        pass
-
 # parses a "document"
 def parse (rawline : str):
     # checks that it's not empty
@@ -135,7 +125,7 @@ def parse (rawline : str):
             else:
                 # creates new block
                 blockdepth += 1
-                blockname = line[3:-2]
+                blockname = line[2:-2]
                 cb[blockname] = {"list":[]}
                 cb = cb[blockname]
                 blockpath.append(blockname)
@@ -145,6 +135,9 @@ def parse (rawline : str):
             cb[line[0]] = line[1] if line[1][0] != "<" else datstruct(line[1])
         else:
             cb["list"].append(datstruct(line))
+    if (data["did"] == "2"):
+        data["prog"] = 0
+    # print(data)
     # adds the data to the final list
     datums.append(data)
 

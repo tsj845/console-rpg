@@ -6,13 +6,13 @@ ac = 1
 ~~ name ~~
 name = test range
 ~~ rooms ~~
-**ROOMS**
+**rooms**
 ~~ room 1 ~~
 **0**
 ~~ enemy ~~
 <ENEMY type=0 level=0>
 **/0**
-**/TASKS**
+**/rooms**
 ```
 ```
 ~~ quest giver ~~
@@ -30,13 +30,13 @@ qid = 0
 ~~ name ~~
 name = tutorial
 ~~ tasks ~~
-**TASKS**
+**tasks**
 **0**
-trigger = <ACTION kind=ANY specific=NULL>
+trigger = <ACTION kind=any specific=null>
 text = first steps
 **/0**
-**/TASKS**
-**REWARDS**
+**/tasks**
+**rewards**
 <XP amount=1>
-**/REWARDS**
+**/rewards**
 ```

@@ -4,6 +4,7 @@ from numpy import floor
 
 # stores level up reward data
 class LevelRewards ():
+    ## LevelRewards
     def __init__ (self):
         self.health = 10
         self.mana = 5
@@ -27,6 +28,7 @@ class LevelRewards ():
 
 # holds item data
 class Item ():
+    ## Item
     def __init__ (self, it, name, stats, level=0, xp=0, reqxp=5, levelmod=1.2):
         self.type = it
         self.name = name
@@ -56,6 +58,7 @@ class Item ():
 
 # handles complex item tasks
 class ItemManager ():
+    ## ItemManager
     def __init__ (self):
         self.namesets = itemnamesets
         self.slotnames = bodyslotnames
@@ -83,6 +86,7 @@ ItemManager = ItemManager()
 
 # enemy inventory, seperate because the inventory consists only of equipped items and is not normally modified
 class EnemyInventory ():
+    ## EnemyInventory
     def __init__ (self, level, typeid, preset=None):
         self.level = level
         self.name = "unset"
@@ -100,6 +104,7 @@ class EnemyInventory ():
 
 # stores data about an enemy
 class Enemy ():
+    ## Enemy
     def __init__ (self, typeid, level, preset=None):
         self.typeid = typeid
         self.level = level
@@ -122,6 +127,7 @@ class Enemy ():
 
 # player inventory
 class PlayerInventory ():
+    ## PlayerInventory
     def __init__ (self):
         self.slots = []
         self.maxslots = 10
@@ -154,6 +160,7 @@ class PlayerInventory ():
 
 # stores player data
 class Player ():
+    ## Player
     def __init__ (self):
         self.shield = 0
         self.maxh = 10
@@ -188,18 +195,76 @@ class Player ():
 
 # handles top level game logic
 class Runner ():
+    ## Runner
     def __init__ (self):
         self.player = Player()
         self.area_data = {}
         self.room_data = {}
         self.full_data = []
+        self.active_quests = []
         self.enemies = []
         self.entities = []
+        # events
+        self.listeners = {"any":{"null":[]}, "input":{"null":[]}, "output":{"null":[]}, "load":{"null":[],"area":[],"room":[]}, "combat":{"null":[],"start":[],"win":[],"lose":[],"attack":[],"enemy-death":[]}, "quest":{"null":[],"accept":[],"complete":[]}, "reward":{"null":[],"combat":[],"quest":[]}, "dialog":{"null":[],"start":[],"leave":[],"continue":[]}, "shop":{"null":[],"enter":[],"leave":[]}}
+    ## events
+    def listen (self, listener, kind="any", specific="null"):
+        self.listeners[kind][specific].append(listener)
+    def _trigger_any (self, kind="any", spec="null"):
+        for l in self.listeners["any"]["null"]:
+            l((kind, spec))
+    def trigger_event (self, kind, specific, *data):
+        self._trigger_any(kind, specific)
+        for l in self.listeners[kind][specific]:
+            l((kind, specific), *data)
+    ## loading
     def load_area (self, data):
-        pass
+        self.trigger_event("load", "area", data)
     def load_room (self, data):
-        pass
+        self.trigger_event("load", "room", data)
     def load_full (self, data):
         self.full_data = data
+    ## input
+    def parse_input (self, text):
+        self.trigger_event("input", "null", text)
+    ## quests
+    def _parse_qes (self, quest):
+        focus = quest["tasks"]["0"]["trigger"]
+        return focus["kind"], focus["specific"]
+    def _reward (self, rewards):
+        for r in rewards["list"]:
+            if (r["name"] == "XP"):
+                self.player.receive_xp(int(r["amount"]))
+            elif (r["name"] == "ITEM"):
+                pass
+        self.trigger_event("reward", "quest", rewards)
+    def _compquest (self, qid):
+        quest = None
+        for i in range(len(self.active_quests)):
+            if (self.active_quests[i]["qid"] == qid):
+                quest
+                quest = self.active_quests[i]
+                break
+        self.trigger_event("quest", "complete", quest)
+        self._reward(quest["rewards"])
+    def _progquest (self, qid):
+        quest = None
+        for i in range(len(self.active_quests)):
+            if (self.active_quests[i]["qid"] == qid):
+                quest
+                quest = self.active_quests[i]
+                break
+        quest["prog"] = quest["prog"] + 1
+        if (quest["prog"] == len(quest["tasks"].keys())-1):
+            self._compquest(qid)
+        else:
+            self.trigger_event("quest", "progress", quest)
+    def _questing (self, quest):
+        def f (*a):
+            self._progquest(quest["qid"])
+        return f
+    def activate_quest (self, quest):
+        self.active_quests.append(quest)
+        self.listen(self._questing(quest), *self._parse_qes(quest))
+    ## main start
     def start (self):
         pass
