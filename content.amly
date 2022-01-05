@@ -33,6 +33,10 @@ name = tutorial
 **TASKS**
 **0**
 trigger = <ACTION kind=ANY specific=NULL>
+text = first steps
 **/0**
 **/TASKS**
+**REWARDS**
+<XP amount=1>
+**/REWARDS**
 ```
