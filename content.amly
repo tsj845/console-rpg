@@ -1,0 +1,38 @@
+```
+~~ dungeon ~~
+did = 0
+~~ number of areas ~~
+ac = 1
+~~ name ~~
+name = test range
+~~ rooms ~~
+**ROOMS**
+~~ room 1 ~~
+**0**
+~~ enemy ~~
+<ENEMY type=0 level=0>
+**/0**
+**/TASKS**
+```
+```
+~~ quest giver ~~
+did = 1
+~~ quest id ~~
+qid = 0
+~~ name ~~
+name = bob
+```
+```
+~~ quest ~~
+did = 2
+~~ quest id ~~
+qid = 0
+~~ name ~~
+name = tutorial
+~~ tasks ~~
+**TASKS**
+**0**
+trigger = <ACTION kind=ANY specific=NULL>
+**/0**
+**/TASKS**
+```
