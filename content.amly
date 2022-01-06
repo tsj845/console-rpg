@@ -9,16 +9,28 @@ name = test range
 **rooms**
 ~~ room 1 ~~
 **0**
+~~ npc ~~
+<NPC nid=0>
+<CON target=1>
+**/0**
+**1**
 ~~ enemy ~~
 <ENEMY type=0 level=0>
-**/0**
+~~ chest ~~
+<CHEST level=0>
+<CON target=0>
+**/1**
 **/rooms**
+**cons**
+**/cons**
+startroom = 0
 ```
 ```
 ~~ quest giver ~~
 did = 1
 ~~ quest id ~~
 qid = 0
+nid = 0
 ~~ name ~~
 name = bob
 ```

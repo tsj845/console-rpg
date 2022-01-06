@@ -198,10 +198,14 @@ class Runner ():
     ## Runner
     def __init__ (self):
         self.player = Player()
+        # collections of rooms
         self.area_data = {}
+        # a single room
         self.room_data = {}
-        self.full_data = []
+        # all the data in the game
+        self.full_data = {"dungeons":[], "npcs":[], "quests":[], "misc":[]}
         self.active_quests = []
+        # active enemies/entities
         self.enemies = []
         self.entities = []
         # events
@@ -218,13 +222,111 @@ class Runner ():
             l((kind, specific), *data)
     ## loading
     def load_area (self, data):
+        self.area_data = data
+        self.load_room(data["startroom"])
         self.trigger_event("load", "area", data)
     def load_room (self, data):
+        # print(data)
+        # loadings = data["list"]
+        self.room_data = data
         self.trigger_event("load", "room", data)
     def load_full (self, data):
-        self.full_data = data
+        for i in range(len(data)):
+            x = data[i]
+            self.full_data[["dungeons","npcs","quests","misc"][int(x["did"])]].append(x)
+        self.load_area(self.full_data["dungeons"][0])
+    def _getrooms (self):
+        rooms = []
+        for key in list(self.area_data["rooms"].keys())[1:]:
+            rooms.append(self.area_data["rooms"][key])
+        return rooms
+    def _getroomcons (self, room):
+        cons = []
+        for ent in room["list"]:
+            if (ent["name"] == "CON"):
+                cons.append(ent)
+        return cons
+    ## map display
+    def _disp_map (self):
+        rooms = self._getrooms()
+        connections = {}
+        for room in rooms:
+            cons = self._getroomcons(room)
+    ## listing
+    def _list_rooms (self):
+        # print(self.area_data)
+        # print(self.room_data)
+        keys = list(self.area_data["rooms"].keys())[1:]
+        for key in keys:
+            print(key + (" current" if self.area_data["rooms"][key] == self.room_data else ""))
+    def _list_room_connections (self):
+        for ent in self._getroomcons(self.room_data):
+            print(f"door to: {ent['target']}")
+    def _list_room (self, search):
+        if (search == "list rooms"):
+            self._list_rooms()
+            return
+        elif (search == "list doors"):
+            self._list_room_connections()
+            return
+        ents = []
+        etc = {"0":"melee", "1":"mage"}
+        def getnpc (nid):
+            for i in range(len(self.full_data["npcs"])):
+                npc = self.full_data["npcs"][i]
+                if (npc["nid"] == nid):
+                    return npc
+            return {"name":"not found"}
+        for i in range(len(self.room_data["list"])):
+            ent = self.room_data["list"][i]
+            if (ent["name"] == "ENEMY"):
+                ents.append(f"<ENEMY type={etc[ent['type']]} level={ent['level']}>")
+            elif (ent["name"] == "NPC"):
+                ents.append(f"<NPC name={getnpc(ent['nid'])['name']}>")
+            elif (ent["name"] == "CHEST"):
+                ents.append(f"<CHEST level={ent['level']}>")
+        if (len(search) > 4):
+            search = search[5:]
+            length = 0
+            check = ""
+            if (search == "enemies"):
+                length = 5
+                check = "ENEMY"
+            elif (search == "npcs"):
+                length = 3
+                check = "NPC"
+            elif (search == "chests"):
+                length = 5
+                check = "CHEST"
+            ol = len(ents)
+            for i in range(ol):
+                i = ol - i - 1
+                if (ents[i][1:length+1] != check):
+                    ents.pop(i)
+        print(*ents, sep="\n")
     ## input
-    def parse_input (self, text):
+    def parse_input (self, text : str) -> None:
+        # map of area
+        if (text == "map"):
+            self._disp_map()
+        # list interactions
+        elif (text.startswith("list")):
+            self._list_room(text)
+        # fight neutral entity
+        elif (text.startswith("fight")):
+            pass
+        # talk to npc
+        elif (text.startswith("talk")):
+            pass
+        # inventory
+        elif (text == "inven"):
+            pass
+        # loot the room
+        elif (text == "loot"):
+            pass
+        # peek into another room
+        elif (text.startswith("peek")):
+            pass
         self.trigger_event("input", "null", text)
     ## quests
     def _parse_qes (self, quest):

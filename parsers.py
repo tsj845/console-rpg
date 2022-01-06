@@ -73,11 +73,15 @@ def parse (rawline : str):
             blocks.append(rawline[i])
         else:
             nonblocks.append(rawline[i])
+    specials = []
     # handles simple lines
     for line in nonblocks:
         if (not len(line)):
             continue
         line = line.split(" = ")
+        if (line[0] in ("startroom",)):
+            specials.append(line)
+            continue
         data[line[0]] = line[1]
     blockdepth = 0
     # path to current block
@@ -135,6 +139,10 @@ def parse (rawline : str):
             cb[line[0]] = line[1] if line[1][0] != "<" else datstruct(line[1])
         else:
             cb["list"].append(datstruct(line))
+    for i in range(len(specials)):
+        line = specials[i]
+        if (line[0] == "startroom"):
+            data["startroom"] = data["rooms"][line[1]]
     if (data["did"] == "2"):
         data["prog"] = 0
     # print(data)
