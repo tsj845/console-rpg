@@ -267,4 +267,15 @@ class Runner ():
         self.listen(self._questing(quest), *self._parse_qes(quest))
     ## main start
     def start (self):
-        pass
+        while True:
+            inp = input("> ")
+            if (inp == "save"):
+                pass
+            elif (inp == "load"):
+                pass
+            elif (inp == "quit"):
+                if (input("type \"yes\" to confirm: ") != "yes"):
+                    continue
+                break
+            else:
+                self.parse_input(inp)
