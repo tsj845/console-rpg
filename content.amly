@@ -5,7 +5,7 @@ did = 0
 ac = 1
 ~~ name ~~
 name = test range
-~~ rooms ~~
+~~ rooms, flat list ~~
 *&rooms**
 ~~ room 1 ~~
 **entry**
@@ -13,15 +13,18 @@ name = test range
 <NPC nid=0>
 <CON target=1>
 **/entry**
-**1**
+**hall 1**
 ~~ enemy ~~
 <ENEMY type=0 level=0>
 ~~ chest ~~
 <CHEST level=0>
 <CON target=0>
-**/1**
+**/hall 1**
+**hall 2**
+<ENEMY eid=tuten>
+**/hall 2**
 **/rooms**
-**cons**
+*&cons**
 **/cons**
 startroom = entry
 ```
@@ -51,4 +54,24 @@ text = first steps
 *&rewards**
 <XP amount=1>
 **/rewards**
+```
+```
+~~ predefined enemy ~~
+did = 3
+~~ enemy id ~~
+eid = tuten
+~~ name ~~
+name = tutorial boss
+level = 0
+type = 0
+baseh = 5
+based = 0
+basea = 1
+bases = 2
+basem = 0
+~~ items ~~
+**items**
+weapon = <ITEM level=0 xpr=0 xpm=0 hmod=1 dmod=1 amod=2 smod=0 mmod=0 name="wubba dub dub">
+shield = <ITEM level=0 xpr=0 xpm=0 hmod=0 dmod=2 amod=0 smod=0 mmod=0 name="bubba bub blocked">
+**/items**
 ```

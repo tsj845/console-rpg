@@ -1,6 +1,6 @@
 import re
 
-commentre = re.compile("~~[\w\s]*~~\n?")
+commentre = re.compile("~~.*~~\n?")
 assignre = re.compile("[^\n]+ = [^\n]+\n?")
 blockre = re.compile("\*\*[\w\s/]*\*\*\n?|\*&[\w\s]*\*\*\n?")
 
@@ -98,17 +98,22 @@ def parse (rawline : str):
     def nqs (string : str, sep : str):
         f = string.split(sep)
         i = 0
-        while i < len(f):
+        while i < len(f)-1:
             if (i >= len(f)):
                 break
             if (f[i].count("\"") % 2 != 0):
-                while i+1 < len(f) and f[i+1].count("\"") % 2 != 0:
-                    f[i] = f[i] + f.pop(i+1)
+                f[i] = f[i] + " " + f.pop(i+1)
             i += 1
+        if (f[-1].count("\"") % 2 != 0):
+            a = f.pop()
+            f.append(f.pop() + " " + a)
+        for i in range(len(f)):
+            f[i] = f[i].replace("\"", "")
         return f
     # data structure parsing
     def datstruct (line : str):
         line = nqs(line[1:-1], " ")
+        # print(line)
         struct = {"name":line.pop(0)}
         for x in line:
             x = x.split("=")
@@ -178,3 +183,5 @@ for i in range(lines.count("\n")):
 # parses data
 for lineind in range(len(lines)):
     parse(lines[lineind])
+
+print(datums[0])

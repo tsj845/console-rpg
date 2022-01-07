@@ -3,6 +3,7 @@ _beta = True
 from datatables import itemmaxs, itemnamesets, itemmins, bodyslotnames, enemymins, enemymaxs
 from random import choice, randrange
 from numpy import floor
+from time import sleep
 
 # stores level up reward data
 class LevelRewards ():
@@ -126,6 +127,13 @@ class Enemy ():
             self.mana = randrange(mins["m"], maxs["m"]+1)
             self.stamina = randrange(mins["m"], maxs["m"]+1)
             self.attack = randrange(mins["a"], maxs["a"]+1)
+    def takedmg (self, amount : int) -> bool:
+        amount = max(0, amount - self.defense)
+        self.health -= amount
+        if (self.health < 0):
+            return True
+        else:
+            return False
 
 # player inventory
 class PlayerInventory ():
@@ -190,6 +198,15 @@ class Player ():
         self.defense += self.levrew.defense
         self.levrew.level()
         self.inventory.maxslots += 5
+    def calc_stat (self, statid : str):
+        return {"h":self.health,"a":self.attack,"d":self.defense,"s":self.stamina,"m":self.mana}[statid] + self.inventory.calc_stat(statid)
+    def takedmg (self, amount : int) -> bool:
+        amount = max(0, amount - self.defense)
+        self.health -= amount
+        if (self.health < 0):
+            return True
+        else:
+            return False
     def receive_xp (self, amount : int):
         self.xp += amount
         if (self.xp >= self.reqxp):
@@ -205,11 +222,13 @@ class Runner ():
         # a single room
         self.room_data = {}
         # all the data in the game
-        self.full_data = {"dungeons":[], "npcs":[], "quests":[], "misc":[]}
+        self.full_data = {"dungeons":[], "npcs":[], "quests":[], "enemies":[], "misc":[]}
         self.active_quests = []
         # active enemies/entities
         self.enemies = []
         self.entities = []
+        # if the player is in combat
+        self.incombat = False
         # events
         self.listeners = {"any":{"null":[]}, "input":{"null":[]}, "output":{"null":[]}, "load":{"null":[],"area":[],"room":[]}, "combat":{"null":[],"start":[],"win":[],"lose":[],"attack":[],"enemy-death":[]}, "quest":{"null":[],"accept":[],"complete":[]}, "reward":{"null":[],"combat":[],"quest":[]}, "dialog":{"null":[],"start":[],"leave":[],"continue":[]}, "shop":{"null":[],"enter":[],"leave":[]}}
     ## events
@@ -222,6 +241,45 @@ class Runner ():
         self._trigger_any(kind, specific)
         for l in self.listeners[kind][specific]:
             l((kind, specific), *data)
+    def _room_has (self, typename : str) -> bool:
+        for ent in self.room_data["list"]:
+            if (ent["name"] == typename):
+                return True
+        return False
+    def _ge_all (self, typename : str) -> list:
+        ents = []
+        for ent in self.room_data["list"]:
+            if (ent["name"] == typename):
+                ents.append(ent)
+        return ents
+    ## combat
+    def _form_endat (self, data : dict):
+        if ("eid" in data):
+            pass
+        else:
+            return data["type"], data["level"]
+    def _check_combat (self):
+        enemies = self._ge_all("ENEMY")
+        if (not len(enemies)):
+            return
+        self.enemies = []
+        for en in enemies:
+            self.enemies.append(Enemy(*self._form_endat(en)))
+        self.incombat = True
+    def _attack (self, text : str) -> None:
+        if (len(text) < 7):
+            return
+        text = text[6:]
+        if (not text.isdigit()):
+            return
+        text = int(text) - 1
+        if (text >= len(self.enemies)):
+            return
+        en = self.enemies[text]
+        if (en.takedmg(self.player.calc_stat("a"))):
+            self.enemies.pop(self.enemies.index(en))
+            if (len(self.enemies) == 0):
+                self.incombat = False
     ## loading
     def load_area (self, data):
         self.area_data = data.copy()
@@ -232,10 +290,11 @@ class Runner ():
         self.room_data = data
         self.room_data["visit"] = None
         self.trigger_event("load", "room", data)
+        self._check_combat()
     def load_full (self, data):
         for i in range(len(data)):
             x = data[i]
-            self.full_data[["dungeons","npcs","quests","misc"][int(x["did"])]].append(x)
+            self.full_data[["dungeons","npcs","quests","enemies","misc"][int(x["did"])]].append(x)
         self.load_area(self.full_data["dungeons"][0])
     def _grabroom (self, uid : str):
         for room in self.area_data["rooms"]:
@@ -259,8 +318,8 @@ class Runner ():
         # print(self.room_data)
         cons = self._getroomcons(self.room_data, True)
         for room in self.area_data["rooms"]:
-            if ("visit" in room or room['uid'] in cons):
-                print(room['uid'] + (" (current)" if room['uid'] == self.room_data['uid'] else ""))
+            if ("visit" in room or room['uid'] in cons or _beta):
+                print(room['uid'] + (" (current)" if room['uid'] == self.room_data['uid'] else "") + (" (unvisited)" if "visit" not in room else ""))
     def _list_room_connections (self):
         for ent in self._getroomcons(self.room_data):
             print(f"door to: {ent['target']}")
@@ -317,14 +376,39 @@ class Runner ():
             print("you're already in that room")
         else:
             print("that room isn't adjacent")
+    ## walking
+    def _walk_to (self, text : str) -> None:
+        if (len(text) < 6):
+            return
+        text = text[5:]
+        cons = self._getroomcons(self.room_data, True)
+        if (text not in cons):
+            print("that room isn't adjacent")
+        else:
+            print(f"walking to {text}...")
+            sleep(0.25)
+            self.load_room(self._grabroom(text))
+    ## combat input
+    def _parse_combin (self, text : str) -> None:
+        if (text == "list"):
+            for en in self.enemies:
+                print(f"<ENEMY type={en.typeid} level={en.level}>")
+        elif (text.startswith("attack")):
+            self._attack(text)
     ## input
     def parse_input (self, text : str) -> None:
+        if (self.incombat):
+            self._parse_combin(text)
+            return
         # map of area
         if (text == "map"):
             self._disp_map()
         # list interactions
         elif (text.startswith("list")):
             self._list_room(text, self.room_data)
+        # move
+        elif (text.startswith("walk")):
+            self._walk_to(text)
         # fight neutral entity
         elif (text.startswith("fight")):
             pass
