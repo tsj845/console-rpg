@@ -2,7 +2,7 @@ import re
 
 commentre = re.compile("~~[\w\s]*~~\n?")
 assignre = re.compile("[^\n]+ = [^\n]+\n?")
-blockre = re.compile("\*\*[\w\s/]*\*\*\n?")
+blockre = re.compile("\*\*[\w\s/]*\*\*\n?|\*&[\w\s]*\*\*\n?")
 
 # lines
 lines = []
@@ -79,9 +79,9 @@ def parse (rawline : str):
         if (not len(line)):
             continue
         line = line.split(" = ")
-        if (line[0] in ("startroom",)):
-            specials.append(line)
-            continue
+        # if (line[0] in ("startroom",)):
+        #     specials.append(line)
+        #     continue
         data[line[0]] = line[1]
     blockdepth = 0
     # path to current block
@@ -114,6 +114,7 @@ def parse (rawline : str):
             x = x.split("=")
             struct[x[0]] = x[1]
         return struct
+    flatlist = False
     # parses blocks
     for line in blocks:
         # checks non-zero length
@@ -126,25 +127,46 @@ def parse (rawline : str):
                 blockdepth -= 1
                 blockpath.pop()
                 cb = getcb()
+                if (blockdepth == 0):
+                    flatlist = False
             else:
                 # creates new block
                 blockdepth += 1
                 blockname = line[2:-2]
-                cb[blockname] = {"list":[]}
-                cb = cb[blockname]
-                blockpath.append(blockname)
+                if (line[1] == "&"):
+                    cb[blockname] = []
+                    flatlist = True
+                    cb = cb[blockname]
+                    blockpath.append(blockname)
+                else:
+                    if (flatlist and blockdepth == 2):
+                        cb.append({"list":[], "uid":blockname})
+                        blockpath.append(len(cb)-1)
+                        cb = cb[-1]
+                    else:
+                        cb[blockname] = {"list":[]}
+                        cb = cb[blockname]
+                        blockpath.append(blockname)
         # checks for assignment
         elif (assignre.match(line)):
             line = line.split(" = ")
             cb[line[0]] = line[1] if line[1][0] != "<" else datstruct(line[1])
         else:
-            cb["list"].append(datstruct(line))
-    for i in range(len(specials)):
-        line = specials[i]
-        if (line[0] == "startroom"):
-            data["startroom"] = data["rooms"][line[1]]
+            # print(cb)
+            if (flatlist and blockdepth == 1):
+                cb.append(datstruct(line))
+            else:
+                cb["list"].append(datstruct(line))
+    # for i in range(len(specials)):
+    #     line = specials[i]
+    #     if (line[0] == "startroom"):
+    #         data["startroom"] = _ret(data["rooms"], line[1])
     if (data["did"] == "2"):
         data["prog"] = 0
+    # print("{")
+    # for key in data.keys():
+        # print(f"{key}: {data[key]}")
+    # print("}")
     # print(data)
     # adds the data to the final list
     datums.append(data)

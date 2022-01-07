@@ -1,3 +1,7 @@
+_beta = True
+_sf_name = "tmp"
+_sf_ext = "crps"
+
 from datatables import itemmaxs, itemnamesets, itemmins, bodyslotnames, enemymins, enemymaxs
 from random import choice, randrange
 from numpy import floor
@@ -222,47 +226,47 @@ class Runner ():
             l((kind, specific), *data)
     ## loading
     def load_area (self, data):
-        self.area_data = data
-        self.load_room(data["startroom"])
-        self.trigger_event("load", "area", data)
+        self.area_data = data.copy()
+        self.load_room(self.area_data["rooms"][int(self.area_data["startroom"])] if self.area_data["startroom"].isdigit() else self._grabroom(self.area_data["startroom"]))
+        self.trigger_event("load", "area", self.area_data)
     def load_room (self, data):
         # print(data)
-        # loadings = data["list"]
         self.room_data = data
+        self.room_data["visit"] = None
         self.trigger_event("load", "room", data)
     def load_full (self, data):
         for i in range(len(data)):
             x = data[i]
             self.full_data[["dungeons","npcs","quests","misc"][int(x["did"])]].append(x)
         self.load_area(self.full_data["dungeons"][0])
-    def _getrooms (self):
-        rooms = []
-        for key in list(self.area_data["rooms"].keys())[1:]:
-            rooms.append(self.area_data["rooms"][key])
-        return rooms
-    def _getroomcons (self, room):
+    def _grabroom (self, uid : str):
+        for room in self.area_data["rooms"]:
+            if (room["uid"] == uid):
+                return room
+    def _getroomcons (self, room, flat=False):
         cons = []
         for ent in room["list"]:
             if (ent["name"] == "CON"):
                 cons.append(ent)
+        if (flat):
+            for i in range(len(cons)):
+                cons[i] = cons[i]["target"]
         return cons
     ## map display
     def _disp_map (self):
-        rooms = self._getrooms()
-        connections = {}
-        for room in rooms:
-            cons = self._getroomcons(room)
+        pass
     ## listing
     def _list_rooms (self):
         # print(self.area_data)
         # print(self.room_data)
-        keys = list(self.area_data["rooms"].keys())[1:]
-        for key in keys:
-            print(key + (" current" if self.area_data["rooms"][key] == self.room_data else ""))
+        cons = self._getroomcons(self.room_data, True)
+        for room in self.area_data["rooms"]:
+            if ("visit" in room or room['uid'] in cons):
+                print(room['uid'] + (" (current)" if room['uid'] == self.room_data['uid'] else ""))
     def _list_room_connections (self):
         for ent in self._getroomcons(self.room_data):
             print(f"door to: {ent['target']}")
-    def _list_room (self, search):
+    def _list_room (self, search, room):
         if (search == "list rooms"):
             self._list_rooms()
             return
@@ -278,7 +282,7 @@ class Runner ():
                     return npc
             return {"name":"not found"}
         for i in range(len(self.room_data["list"])):
-            ent = self.room_data["list"][i]
+            ent = room["list"][i]
             if (ent["name"] == "ENEMY"):
                 ents.append(f"<ENEMY type={etc[ent['type']]} level={ent['level']}>")
             elif (ent["name"] == "NPC"):
@@ -304,6 +308,17 @@ class Runner ():
                 if (ents[i][1:length+1] != check):
                     ents.pop(i)
         print(*ents, sep="\n")
+    def _peek (self, text : str) -> None:
+        if (len(text) < 5):
+            return
+        text = text[5:]
+        cons = self._getroomcons(self.room_data, True)
+        if (text in cons):
+            self._list_room("list", self._grabroom(text))
+        elif (text == self.room_data["uid"]):
+            print("you're already in that room")
+        else:
+            print("that room isn't adjacent")
     ## input
     def parse_input (self, text : str) -> None:
         # map of area
@@ -311,7 +326,7 @@ class Runner ():
             self._disp_map()
         # list interactions
         elif (text.startswith("list")):
-            self._list_room(text)
+            self._list_room(text, self.room_data)
         # fight neutral entity
         elif (text.startswith("fight")):
             pass
@@ -326,7 +341,7 @@ class Runner ():
             pass
         # peek into another room
         elif (text.startswith("peek")):
-            pass
+            self._peek(text)
         self.trigger_event("input", "null", text)
     ## quests
     def _parse_qes (self, quest):
@@ -376,6 +391,8 @@ class Runner ():
             elif (inp == "load"):
                 pass
             elif (inp == "quit"):
+                if (_beta):
+                    break
                 if (input("type \"yes\" to confirm: ") != "yes"):
                     continue
                 break
