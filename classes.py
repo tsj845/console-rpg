@@ -385,9 +385,9 @@ class Runner ():
         while True:
             inp = input("> ")
             if (inp == "save"):
-                pass
+                SaveLoader.save()
             elif (inp == "load"):
-                pass
+                SaveLoader.load()
             elif (inp == "quit"):
                 if (_beta):
                     break
@@ -404,6 +404,11 @@ class SaveLoader ():
     def __init__ (self):
         self._sf_name = "save"
         self._sf_ext = "tssvf"
+        try:
+            with open(f"{self._sf_name}.{self._sf_ext}", "x"):
+                pass
+        except FileExistsError:
+            pass
     def _fileman (self, rw : bool = False, data : str = ""):
         with open(f"{self._sf_name}.{self._sf_ext}", ("w" if rw else "r")) as f:
             if (rw):
@@ -412,7 +417,11 @@ class SaveLoader ():
                 lines = f.read()
         if (not rw):
             return lines
+    ## save
     def save (self):
         pass
+    ## load
     def load (self):
         pass
+
+SaveLoader = SaveLoader()
