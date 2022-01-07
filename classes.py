@@ -1,6 +1,4 @@
 _beta = True
-_sf_name = "tmp"
-_sf_ext = "crps"
 
 from datatables import itemmaxs, itemnamesets, itemmins, bodyslotnames, enemymins, enemymaxs
 from random import choice, randrange
@@ -398,3 +396,23 @@ class Runner ():
                 break
             else:
                 self.parse_input(inp)
+
+game = Runner()
+
+## saveloader
+class SaveLoader ():
+    def __init__ (self):
+        self._sf_name = "save"
+        self._sf_ext = "tssvf"
+    def _fileman (self, rw : bool = False, data : str = ""):
+        with open(f"{self._sf_name}.{self._sf_ext}", ("w" if rw else "r")) as f:
+            if (rw):
+                f.write(data)
+            else:
+                lines = f.read()
+        if (not rw):
+            return lines
+    def save (self):
+        pass
+    def load (self):
+        pass
