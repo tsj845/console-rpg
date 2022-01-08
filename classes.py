@@ -17,6 +17,9 @@ def _game_print (*args, sep : str= " ", end : str = "\n", flush : bool = False) 
     print("\x1b[2K", end="")
     print(*args, sep=sep, end=end, flush=flush)
 
+def _run_teach () -> None:
+    _game_print("base commands:\n\tquit\n\twalk [destination]\n\tlist [options?]\n\tpeek [target]\ncombat commands:\n\tlist\n\tstatus\n\tattack [target]\n\trest")
+
 # stores level up reward data
 class LevelRewards ():
     ## LevelRewards
@@ -588,6 +591,8 @@ class Runner ():
         _game_print("game over")
     ## main start
     def start (self) -> None:
+        if (not _dev):
+            _run_teach()
         while True:
             inp = input("\x1b[2K> ")
             if (inp == "save"):
