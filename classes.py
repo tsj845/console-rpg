@@ -1,6 +1,5 @@
 _dev = True
 
-from re import S
 import sys
 
 if (len(sys.argv) > 1):
