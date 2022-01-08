@@ -1,12 +1,12 @@
-_beta = True
+_dev = True
 
 from re import S
 import sys
 
 if (len(sys.argv) > 1):
-    _beta = True
+    _dev = True
 else:
-    _beta = False
+    _dev = False
 
 from datatables import itemmaxs, itemnamesets, itemmins, bodyslotnames, enemymins, enemymaxs
 from random import choice, randrange
@@ -425,7 +425,7 @@ class Runner ():
     def _list_rooms (self) -> None:
         cons = self._getroomcons(self.room_data, True)
         for room in self.area_data["rooms"]:
-            if ("visit" in room or room['uid'] in cons or _beta):
+            if ("visit" in room or room['uid'] in cons or _dev):
                 _game_print(room['uid'] + (" (current)" if room['uid'] == self.room_data['uid'] else "") + (" (unvisited)" if "visit" not in room else ""))
     def _list_room_connections (self) -> None:
         for ent in self._getroomcons(self.room_data):
@@ -511,7 +511,7 @@ class Runner ():
             self._enemy_atk()
     ## input
     def parse_input (self, text : str) -> None:
-        if (_beta):
+        if (_dev):
             if (text.startswith("sps")):
                 text = text.split(" ")
                 self.player.setstat(text[1], int(text[2]))
@@ -595,7 +595,7 @@ class Runner ():
             elif (inp == "load"):
                 SaveLoader.load()
             elif (inp == "quit"):
-                if (_beta):
+                if (_dev):
                     break
                 if (input("type \"yes\" to confirm: ") != "yes"):
                     continue
