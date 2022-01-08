@@ -1,22 +1,14 @@
 ```
-~~ dungeon ~~
 did = 0
-~~ number of areas ~~
 ac = 1
-~~ name ~~
 name = test range
-~~ rooms, flat list ~~
 *&rooms**
-~~ room 1 ~~
 **entry**
-~~ npc ~~
 <NPC nid=0>
 <CON target="hall 1">
 **/entry**
 **hall 1**
-~~ enemy ~~
 <ENEMY type=0 level=0 dabs=0>
-~~ chest ~~
 <CHEST level=0>
 <CON target=entry>
 <CON target="hall 2">
@@ -31,22 +23,15 @@ name = test range
 startroom = entry
 ```
 ```
-~~ quest giver ~~
 did = 1
-~~ quest id ~~
 qid = 0
 nid = 0
-~~ name ~~
 name = bob
 ```
 ```
-~~ quest ~~
 did = 2
-~~ quest id ~~
 qid = 0
-~~ name ~~
 name = tutorial
-~~ tasks ~~
 *&tasks**
 **0**
 trigger = <ACTION kind=any specific=null>
@@ -58,11 +43,8 @@ text = first steps
 **/rewards**
 ```
 ```
-~~ predefined enemy ~~
 did = 3
-~~ enemy id ~~
 eid = tuten
-~~ name ~~
 name = tutorial boss
 level = 0
 type = 0
@@ -71,7 +53,6 @@ based = 0
 basea = 1
 bases = 2
 basem = 0
-~~ items ~~
 **items**
 weapon = <ITEM level=0 xpr=0 xpm=0 hmod=1 dmod=1 amod=2 smod=0 mmod=0 name="wubba dub dub">
 shield = <ITEM level=0 xpr=0 xpm=0 hmod=0 dmod=2 amod=0 smod=0 mmod=0 name="bubba bub blocked">
