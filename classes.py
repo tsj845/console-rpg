@@ -67,12 +67,18 @@ class Item ():
         self.stats["s"] = self.stats["s"] + self.lr.stamina
         self.stats["d"] = self.stats["d"] + self.lr.defense
         self.lr.level()
+    def setstat (self, statid : str, value : int) -> None:
+        self.stats[statid] = value
     def recieve_xp (self, amount : int) -> None:
         self.xp += amount
         if (self.xp >= self.reqxp):
             self._levelup()
     def calc_stat (self, stat : str) -> None:
         return self.stats[stat]
+    def __str__ (self):
+        return f"<{bodyslotnames[self.type].upper()} \"{self.name}\" h={self.stats['h']} a={self.stats['a']} d={self.stats['d']} s={self.stats['s']} m={self.stats['m']}>"
+    def __repr__ (self):
+        return self.__str__()
 
 # handles complex item tasks
 class ItemManager ():
@@ -98,6 +104,7 @@ class ItemManager ():
         return {"h":randrange(mins["h"],maxs["h"]+1),"a":randrange(mins["a"],maxs["a"]+1),"m":randrange(mins["m"],maxs["m"]+1),"s":randrange(mins["s"],maxs["s"]+1),"d":randrange(mins["d"],maxs["d"]+1)}
     def get_rand_itemset (self, level : int, typeid : int) -> tuple:
         names, ind = self.gri__get_names(typeid, level)
+        print(ind, "itemind")
         classi = names[:2]
         names = names[2:]
         return classi[0], [Item(self.slotnames[i], names[i], self.gri__gen_stats(typeid, level, i, ind), reqxp=1, levelmod=1) if names[i] != None else None for i in range(7)]
@@ -112,6 +119,7 @@ class EnemyInventory ():
         self.classi = typeid
         self.name = "unset"
         self.slots = {"head":None, "body":None, "legs":None, "boots":None, "weapon":None, "shield":None, "charm":None}
+        # if preset was given do that
         if (preset != None):
             self.slots = preset["slots"]
             self.classi = preset["type"]
@@ -119,8 +127,15 @@ class EnemyInventory ():
         else:
             self._gen_slots()
     def _gen_slots (self) -> None:
+        # gets a random name and item set
         self.name, items = ItemManager.get_rand_itemset(self.level, self.classi)
+        # sets slots
         self.slots = {"head":items[0], "body":items[1], "legs":items[2], "boots":items[3], "weapon":items[4], "shield":items[5], "charm":items[6]}
+    def setstat (self, statid : str, value : int) -> None:
+        for key in bodyslotnames:
+            if (self.slots[key] != None):
+                self.slots[key].setstat(statid, value)
+    # calculates a stat
     def calc_stat (self, stat : str) -> int:
         total = 0
         for key in self.slots.keys():
@@ -156,6 +171,18 @@ class Enemy ():
         self.maxmana = self.mana
     def calc_stat (self, statid : str) -> int:
         return {"h":self.health,"a":self.attack,"d":self.defense,"s":self.stamina,"m":self.mana}[statid] + self.inven.calc_stat(statid)
+    def setstat (self, statid : str, value : int) -> None:
+        if (statid == "h"):
+            self.health = value
+        elif (statid == "a"):
+            self.attack = value
+        elif (statid == "d"):
+            self.defense = value
+        elif (statid == "s"):
+            self.stamina = value
+        elif (statid == "m"):
+            self.mana = value
+        self.inven.setstat(statid, value)
     def takedmg (self, amount : int) -> bool:
         amount = max(0, amount - self.calc_stat("d"))
         self.health -= amount
@@ -284,6 +311,9 @@ class Runner ():
         # game state flags
         self.incombat = False
         self.gameover = False
+        self.indialog = False
+        self.ininvent = False
+        self.inshopin = False
         # events
         self.listeners = {"any":{"null":[]}, "input":{"null":[]}, "output":{"null":[]}, "load":{"null":[],"area":[],"room":[]}, "combat":{"null":[],"start":[],"win":[],"lose":[],"attack":[],"enemy-death":[]}, "quest":{"null":[],"accept":[],"complete":[]}, "reward":{"null":[],"combat":[],"quest":[]}, "dialog":{"null":[],"start":[],"leave":[],"continue":[]}, "shop":{"null":[],"enter":[],"leave":[]}}
     ## events
@@ -342,6 +372,9 @@ class Runner ():
         self.enemies = []
         for en in enemies:
             ene = Enemy(*self._form_endat(en))
+            for c in "hadsm":
+                if (c+"abs" in en):
+                    ene.setstat(c, int(en[c+"abs"]))
             self.enemies.append(ene)
             self.netq.append(ene)
         self.incombat = True
@@ -503,15 +536,42 @@ class Runner ():
         if (text == "list"):
             for en in self.enemies:
                 _game_print(f"<ENEMY type={en.typeid} level={en.level} h={en.calc_stat('h')} a={en.calc_stat('a')} d={en.calc_stat('d')} s={en.calc_stat('s')} m={en.calc_stat('m')}>")
-        elif (text == "status"):
-            _game_print(f"h={self.player.health}/{self.player.maxh} a={self.player.attack} d={self.player.defense} s={self.player.stamina} m={self.player.mana}")
         elif (text.startswith("attack")):
             self._attack(text)
         elif (text == "rest"):
-            self.player.stamina = self.player.maxs
-            self.player.mana += ceil((self.player.maxm - self.player.mana) / 2)
-            _game_print("you reset to regain your strength")
             self._enemy_atk()
+    ## inven input
+    def _parse_invent (self, text : str) -> None:
+        if (text == "back"):
+            self.ininvent = False
+            _game_print("leaving inventory...")
+            sleep(0.25)
+            _game_print("", end="")
+            return
+        elif (text.startswith("list")):
+            if (len(text) < 6):
+                return
+            text = text[5:]
+            if (text in ("inven", "items")):
+                if (len(self.player.inventory.slots) == 0):
+                    _game_print("you have nothing in your inventory")
+                for i in range(len(self.player.inventory.slots)):
+                    _game_print(self.player.inventory.slots[i])
+            elif (text == "body"):
+                for key in bodyslotnames:
+                    x = self.player.inventory.body[key]
+                    _game_print(f"{key} : {x if x != None else 'empty'}")
+        elif (text.startswith("equip")):
+            pass
+    ## dialog input
+    def _parse_dialog (self, text : str) -> None:
+        if (text == "leave"):
+            self.indialog = False
+            _game_print("leaving dialog")
+            sleep(0.25)
+            return
+        else:
+            _game_print("work in progress")
     ## input
     def parse_input (self, text : str) -> None:
         if (_dev):
@@ -519,33 +579,57 @@ class Runner ():
                 text = text.split(" ")
                 self.player.setstat(text[1], int(text[2]))
                 return
-        if (self.incombat):
-            self._parse_combin(text)
+        # do inventory stuff
+        if (self.ininvent):
+            self._parse_invent(text)
+            return
+        # do dialog stuff
+        if (self.indialog):
+            self._parse_dialog(text)
             return
         # map of area
         if (text == "map"):
             self._disp_map()
         # list interactions
         elif (text.startswith("list")):
-            self._list_room(text, self.room_data)
+            if (not self.incombat):
+                self._list_room(text, self.room_data)
         # move
         elif (text.startswith("walk")):
-            self._walk_to(text)
+            if (not self.incombat):
+                self._walk_to(text)
         # fight neutral entity
         elif (text.startswith("fight")):
-            pass
+            if (not self.incombat):
+                pass
         # talk to npc
         elif (text.startswith("talk")):
-            pass
+            if (not self.incombat):
+                pass
         # inventory
         elif (text == "inven"):
-            pass
+            self.ininvent = True
+            _game_print("entering inventory")
+            sleep(0.25)
+            _game_print("", end="")
         # loot the room
         elif (text == "loot"):
-            pass
+            if (not self.incombat):
+                pass
         # peek into another room
         elif (text.startswith("peek")):
-            self._peek(text)
+            if (not self.incombat):
+                self._peek(text)
+        # check player status
+        elif (text == "status"):
+            _game_print(f"h={self.player.health}/{self.player.maxh} a={self.player.attack} d={self.player.defense} s={self.player.stamina} m={self.player.mana}")
+        # regain strength
+        elif (text == "rest"):
+            self.player.stamina = self.player.maxs
+            self.player.mana += ceil((self.player.maxm - self.player.mana) / 2)
+            _game_print("you reset to regain your strength")
+        if (self.incombat):
+            self._parse_combin(text)
         self.trigger_event("input", "null", text)
     ## quests
     def _parse_qes (self, quest : dict) -> tuple:
