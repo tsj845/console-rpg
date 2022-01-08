@@ -1,0 +1,115 @@
+game running {
+    if any args are passed to the script then dev mode will be activated, the number and content of args is unused
+
+    dev mode {
+        allows use of dev commands
+        quit doesn't require confirmation
+        'tutorial' is not displayed on start
+        unvisited areas will be displayed in "list rooms" they will be displayed as "[room name] (unvisited)" to avoid confusion
+
+        dev commands {
+            sps - sets player stat value, "sps [statid] [value]"
+        }
+    }
+}
+
+content.amly {
+    - stores all game content
+    syntax {
+        amly document def {
+            ```
+            document content
+            ```
+        }
+        "did" {
+            - document type id
+            0 {
+                - location
+                "ac" - area count (may be removed later)
+                "name" - location name
+                "rooms" - flat list of room defs
+                "cons" - flat list of connections (may be removed later)
+                "startroom" - name of room that the player should start in
+
+                room {
+                    - dict block
+                    contains entity defs
+                }
+            }
+            1 {
+                - quest giver / npc
+                "qid" - id of quest (changes may be made to this)
+                "nid" - id of this npc
+                "name" - name of npc
+                currently not fully developed no further specs available
+            }
+            2 {
+                - quest
+                "qid" - id of quest
+                "name" - name of quest
+                "tasks" - flat list containing task defs
+                "rewards" - flat list containing reward defs
+
+                task defs {
+                    - dict block
+                    "text" - text displayed when displaying task
+                    "trigger" - not fully developed
+                }
+                reward defs {
+                    <XP amount=[amount]> || [item def]
+                }
+                currently not fully developed no further specs available
+            }
+            3 {
+                - predef enemy
+                "eid" - id of enemy
+                "name" - display name of enemy
+                "level" - enemy level
+                "type" - enemy type
+                "baseh" - base enemy health
+                "basea" - base enemy attack
+                "based" - base enemy defense
+                "bases" - base enemy stamina
+                "basem" - base enemy mana
+                "items" {
+                    - dict block
+                    - all properties are optional
+                    - property names are the slot names that their items correspond to
+                    - property values are item defs
+                }
+            }
+        }
+        comments - ~~ comment text ~~, no multiline comments
+        blocks {
+            list - *&name** -> data -> **/name**, lists can only be used at the top level
+            dict - **name** -> data -> **/name**, can be used at any level
+        }
+        entity defs {
+            <[entity type (all caps)] *args>
+            - args seperated by spaces
+            - any strings containing spaces must be quoted
+        }
+        item defs {
+            ent type - ITEM
+            level - item level
+            xpr - reqxp
+            xpm - xpmod
+            hmod - health mod
+            amod - attack mod
+            dmod - defense mod
+            smod - stamina mod
+            mmod - mana mod
+            name - item name
+        }
+        other defs {
+            ENEMY - type, level, [*abs vals] || eid=[predef en id]
+            CHEST - level (work in progress)
+            NPC - nid=[npc id]
+            CON - target=[room name], CON defs are used to display connections with "list doors"
+        }
+        abs vals {
+            - used to set stat values on a specific enemy
+            [statid] + "abs"=[value]
+        }
+    }
+}

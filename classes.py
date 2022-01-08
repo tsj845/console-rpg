@@ -104,7 +104,7 @@ class ItemManager ():
         return {"h":randrange(mins["h"],maxs["h"]+1),"a":randrange(mins["a"],maxs["a"]+1),"m":randrange(mins["m"],maxs["m"]+1),"s":randrange(mins["s"],maxs["s"]+1),"d":randrange(mins["d"],maxs["d"]+1)}
     def get_rand_itemset (self, level : int, typeid : int) -> tuple:
         names, ind = self.gri__get_names(typeid, level)
-        print(ind, "itemind")
+        # print(ind, "itemind")
         classi = names[:2]
         names = names[2:]
         return classi[0], [Item(self.slotnames[i], names[i], self.gri__gen_stats(typeid, level, i, ind), reqxp=1, levelmod=1) if names[i] != None else None for i in range(7)]
