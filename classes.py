@@ -106,13 +106,13 @@ class EnemyInventory ():
     ## EnemyInventory
     def __init__ (self, level : int, typeid : int, preset=None):
         self.level = level
-        self.name = "unset"
         self.classi = typeid
+        self.name = "unset"
         self.slots = {"head":None, "body":None, "legs":None, "boots":None, "weapon":None, "shield":None, "charm":None}
         if (preset != None):
             self.slots = preset["slots"]
-            self.name = preset["name"]
             self.classi = preset["type"]
+            self.name = preset["name"]
         else:
             self._gen_slots()
     def _gen_slots (self) -> None:
@@ -306,8 +306,23 @@ class Runner ():
         return ents
     ## combat
     def _form_endat (self, data : dict):
+        def geten (eid : str) -> dict:
+            for i in range(len(self.full_data["enemies"])):
+                en = self.full_data["enemies"][i]
+                if (en["eid"] == eid):
+                    return en
+        def getpreset (dat : dict) -> dict:
+            d = {"name":dat["name"], "type":int(dat["type"]), "health":int(dat["baseh"]), "attack":int(dat["basea"]), "defense":int(dat["based"]), "stamina":int(dat["bases"]), "mana":int(dat["basem"]), "slots":{}}
+            for slot in bodyslotnames:
+                if (slot in dat):
+                    it = dat["items"][slot]
+                    d["slots"][slot] = Item(bodyslotnames.index(slot), it["name"], {"h":int(it["hmod"]), "a":int(it["amod"]), "d":int(it["dmod"]), "s":int(it["smod"]), "m":int(it["mmod"])}, int(it["level"]), 0, int(it["xpr"]), float(it["xpm"]))
+                else:
+                    d["slots"][slot] = None
+            return d
         if ("eid" in data):
-            pass
+            dat = geten(data["eid"])
+            return int(dat["type"]), int(dat["level"]), getpreset(dat)
         else:
             return int(data["type"]), int(data["level"])
     def _upenunid (self) -> None:
