@@ -113,3 +113,7 @@ content.amly {
         }
     }
 }
+
+save.tssvf {
+    specifications are not and will not be defined until most of the game is done so that specifications will not need constant updating to accomedate basic features
+}
