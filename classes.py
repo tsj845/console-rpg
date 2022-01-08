@@ -1,5 +1,6 @@
 _beta = True
 
+from re import S
 import sys
 
 if (len(sys.argv) > 1):
@@ -9,7 +10,7 @@ else:
 
 from datatables import itemmaxs, itemnamesets, itemmins, bodyslotnames, enemymins, enemymaxs
 from random import choice, randrange
-from numpy import floor
+from numpy import ceil, floor
 from time import sleep
 
 def _game_print (*args, sep : str= " ", end : str = "\n", flush : bool = False) -> None:
@@ -145,8 +146,11 @@ class Enemy ():
             self.health = randrange(mins["h"], maxs["h"]+1)
             self.defense = randrange(mins["d"], maxs["d"]+1)
             self.mana = randrange(mins["m"], maxs["m"]+1)
-            self.stamina = randrange(mins["m"], maxs["m"]+1)
+            self.stamina = randrange(mins["s"], maxs["s"]+1)
             self.attack = randrange(mins["a"], maxs["a"]+1)
+        self.maxhealth = self.health
+        self.maxstamina = self.stamina
+        self.maxmana = self.mana
     def calc_stat (self, statid : str) -> int:
         return {"h":self.health,"a":self.attack,"d":self.defense,"s":self.stamina,"m":self.mana}[statid] + self.inven.calc_stat(statid)
     def takedmg (self, amount : int) -> bool:
@@ -220,6 +224,12 @@ class Player ():
         self.defense += self.levrew.defense
         self.levrew.level()
         self.inventory.maxslots += 5
+    def reset_values (self, dohealth : bool = False, domana : bool = False) -> None:
+        self.stamina = self.maxs
+        if (dohealth):
+            self.health = self.maxh
+        if (domana):
+            self.mana = self.maxm
     def calc_stat (self, statid : str) -> int:
         return {"h":self.health,"a":self.attack,"d":self.defense,"s":self.stamina,"m":self.mana}[statid] + self.inventory.calc_stat(statid)
     def setstat (self, statid : str, value : int) -> None:
@@ -274,7 +284,7 @@ class Runner ():
         # events
         self.listeners = {"any":{"null":[]}, "input":{"null":[]}, "output":{"null":[]}, "load":{"null":[],"area":[],"room":[]}, "combat":{"null":[],"start":[],"win":[],"lose":[],"attack":[],"enemy-death":[]}, "quest":{"null":[],"accept":[],"complete":[]}, "reward":{"null":[],"combat":[],"quest":[]}, "dialog":{"null":[],"start":[],"leave":[],"continue":[]}, "shop":{"null":[],"enter":[],"leave":[]}}
     ## events
-    def listen (self, listener : function, kind : str = "any", specific : str = "null") -> None:
+    def listen (self, listener, kind : str = "any", specific : str = "null") -> None:
         self.listeners[kind][specific].append(listener)
     def _trigger_any (self, kind : str = "any", spec : str = "null") -> None:
         for l in self.listeners["any"]["null"]:
@@ -323,11 +333,20 @@ class Runner ():
         def gi (en : Enemy):
             return self.enemies.index(en)
         e = gi(en)
+        if (en.stamina == 0):
+            _game_print(f"enemy {e} reseted to regain strength")
+            en.stamina = en.maxstamina
+            en.mana = en.maxmana
+            return
+        en.stamina -= 1
         _game_print(f"enemy {e} attacked dealing {max(0, en.calc_stat('a') - self.player.calc_stat('d'))} damage")
         if (self.player.takedmg(en.calc_stat("a"))):
             _game_print(f"enemy {e} killed you")
             self.gameover = True
     def _attack (self, text : str) -> None:
+        if (self.player.stamina == 0):
+            _game_print("you don't have the strength left to do that")
+            return
         if (len(text) < 7):
             return
         text = text[7:]
@@ -336,6 +355,7 @@ class Runner ():
         text = int(text) - 1
         if (text >= len(self.enemies)):
             return
+        self.player.stamina -= 1
         en = self.enemies[text]
         _game_print(f"enemy {text} took {max(0, self.player.calc_stat('a') - en.calc_stat('d'))} damage")
         if (en.takedmg(self.player.calc_stat("a"))):
@@ -352,7 +372,9 @@ class Runner ():
             self._upenunid()
             if (len(self.enemies) == 0):
                 self.incombat = False
-        self._enemy_atk()
+                self.player.reset_values()
+        if (len(self.enemies) > 0):
+            self._enemy_atk()
     ## loading
     def load_area (self, data : dict) -> None:
         self.area_data = data.copy()
@@ -463,8 +485,15 @@ class Runner ():
         if (text == "list"):
             for en in self.enemies:
                 _game_print(f"<ENEMY type={en.typeid} level={en.level} h={en.calc_stat('h')} a={en.calc_stat('a')} d={en.calc_stat('d')} s={en.calc_stat('s')} m={en.calc_stat('m')}>")
+        elif (text == "status"):
+            _game_print(f"h={self.player.health}/{self.player.maxh} a={self.player.attack} d={self.player.defense} s={self.player.stamina} m={self.player.mana}")
         elif (text.startswith("attack")):
             self._attack(text)
+        elif (text == "rest"):
+            self.player.stamina = self.player.maxs
+            self.player.mana += ceil((self.player.maxm - self.player.mana) / 2)
+            _game_print("you reset to regain your strength")
+            self._enemy_atk()
     ## input
     def parse_input (self, text : str) -> None:
         if (_beta):
@@ -532,7 +561,7 @@ class Runner ():
             self._compquest(qid)
         else:
             self.trigger_event("quest", "progress", quest)
-    def _questing (self, quest : dict) -> function:
+    def _questing (self, quest : dict):
         def f (*a):
             self._progquest(quest["qid"])
         return f
