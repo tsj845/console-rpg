@@ -11,17 +11,19 @@ name = test range
 **entry**
 ~~ npc ~~
 <NPC nid=0>
-<CON target=1>
+<CON target="hall 1">
 **/entry**
 **hall 1**
 ~~ enemy ~~
 <ENEMY type=0 level=0>
 ~~ chest ~~
 <CHEST level=0>
-<CON target=0>
+<CON target=entry>
+<CON target="hall 2">
 **/hall 1**
 **hall 2**
 <ENEMY eid=tuten>
+<CON target="hall 1">
 **/hall 2**
 **/rooms**
 *&cons**

@@ -184,4 +184,4 @@ for i in range(lines.count("\n")):
 for lineind in range(len(lines)):
     parse(lines[lineind])
 
-print(datums[0])
+# print(datums[0])
