@@ -107,6 +107,8 @@ class ItemManager ():
         classi = names[:2]
         names = names[2:]
         return classi[0], [Item(self.slotnames[i], names[i], self.gri__gen_stats(typeid, level, i, ind), reqxp=1, levelmod=1) if names[i] != None else None for i in range(7)]
+    def genitem (self, level : int = 0):
+        pass
 
 ItemManager = ItemManager()
 
@@ -592,7 +594,16 @@ class Runner ():
         xpm = float(text[10]) if len(text) > 10 else 0
         self.player.inventory.slots.append(Item(slotid, name, {"h":h,"a":a,"d":d,"s":s,"m":m}, level, xp, xpr, xpm))
     def _lootroom (self) -> None:
-        pass
+        chests = []
+        ol = len(self.room_data["list"])
+        for i in range(ol):
+            i = ol - i - 1
+            ent = self.room_data["list"][i]
+            if (ent["name"] == "CHEST"):
+                chests.append(ent)
+                self.room_data["list"].pop(i)
+        for c in chests:
+            self.player.inventory.add(ItemManager.genitem(int(c["level"])))
     ## input
     def parse_input (self, text : str) -> None:
         if (_dev):
