@@ -79,7 +79,7 @@ content.amly {
                 }
             }
         }
-        comments - ~~ comment text ~~, no multiline comments
+        comments - ~~ comment text, no multiline comments
         blocks {
             list - *&name** -> data -> **/name**, lists can only be used at the top level
             dict - **name** -> data -> **/name**, can be used at any level
