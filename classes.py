@@ -109,7 +109,7 @@ class ItemManager ():
         return classi[0], [Item(self.slotnames[i], names[i], self.gri__gen_stats(typeid, level, i, ind), reqxp=1, levelmod=1) if names[i] != None else None for i in range(7)]
     def genitem (self, level : int = 0):
         slot = randrange(0, len(bodyslotnames))
-        print(len(pitemmins[level]), slot)
+        # print(len(pitemmins[level]), slot)
         mins = pitemmins[level][slot]
         maxs = pitemmaxs[level][slot]
         stats = {"h":randrange(mins["h"],maxs["h"]+1),"a":randrange(mins["a"],maxs["a"]+1),"m":randrange(mins["m"],maxs["m"]+1),"s":randrange(mins["s"],maxs["s"]+1),"d":randrange(mins["d"],maxs["d"]+1)}
@@ -319,20 +319,24 @@ class NPC ():
     def _goto (self, g : str) -> int:
         for i in range(self.pos+1, len(self.linedata[self.active])):
             x = self.linedata[self.active][i]
-            if (x["type"] == 3 and x["lname"] == g):
+            if (x["type"] == "3" and x["lname"] == g):
+                # print(self.linedata[self.active][i:])
                 return i
     def next (self, op = None):
+        if (self.pos >= len(self.linedata[self.active])):
+            return False
+        # print(self.pos, "POSDB")
         dat = self.linedata[self.active][self.pos]
         t = int(dat["type"])
+        # print(t)
         if (t == 0):
             self.pos += 1
-            if (self.pos >= len(self.linedata[self.active])):
-                return False
             return dat["text"]
         elif (t == 1):
             if (op != None):
                 if (op in dat["opts"].keys() and dat != "name"):
                     self.pos = self._goto(dat["opts"][op])
+                    # print(self.pos)
                     return self.next()
             else:
                 return dat["text"], list(dat["opts"].keys())[1:]
@@ -680,11 +684,14 @@ class Runner ():
                 break
         self.active_npc = NPC(npc, dia)
         self.indialog = True
+        flavor = ("you strike a conversation with", "you start talking to", "you initiate data transfer protocols with")
+        _game_print(f"{choice(flavor)} {self.active_npc.name}")
+        self._parse_dialog("", True)
     ## dialog trigger result
     def trigresult (self, trig) -> bool:
         return True
     ## dialog input
-    def _parse_dialog (self, text : str) -> None:
+    def _parse_dialog (self, text : str, k : bool = False) -> None:
         if (text == "leave"):
             self.indialog = False
             self.active_npc = None
@@ -692,8 +699,10 @@ class Runner ():
             sleep(0.25)
             return
         if (text == ""):
+            if (not k):
+                print("\x1b[2K\x1b[1A\x1b[2K", end="")
             r = self.active_npc.next()
-            if (r == None):
+            if (r == False):
                 self._parse_dialog("leave")
                 return
             if (type(r) == str):
@@ -701,7 +710,7 @@ class Runner ():
             else:
                 _game_print(f"{r[0]}: {', '.join(r[1])}")
         else:
-            self.active_npc.next(text)
+            _game_print(self.active_npc.next(text))
             # _game_print("work in progress")
     def _forcegenitem (self, text : str) -> None:
         text = text.split(" ")
@@ -869,7 +878,10 @@ class Runner ():
             if (inp.startswith("S:/")):
                 handleshort(inp)
             else:
-                print(eval(inp))
+                try:
+                    print(eval(inp))
+                except:
+                    print("something went wrong")
     ## main start
     def start (self) -> None:
         if (not _dev):
