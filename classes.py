@@ -207,7 +207,7 @@ class PlayerInventory ():
             return self.slots.pop(index)
         except:
             return False
-    def equip (self, slot : int, index : int) -> bool:
+    def equip (self, slot : str, index : int) -> bool:
         if (len(self.slots) <= index or slot not in self.body.keys()):
             return False
         if (self.body[slot] != None):
@@ -561,7 +561,13 @@ class Runner ():
                     x = self.player.inventory.body[key]
                     _game_print(f"{key} : {x if x != None else 'empty'}")
         elif (text.startswith("equip")):
-            pass
+            text = text.split(" ")
+            if (len(text) < 3 or text[1] not in bodyslotnames):
+                return
+            if (self.player.inventory.equip(text[1], int(text[2])-1)):
+                _game_print("item equipped")
+            else:
+                _game_print("failed to equip item")
     ## dialog input
     def _parse_dialog (self, text : str) -> None:
         if (text == "leave"):
@@ -571,6 +577,22 @@ class Runner ():
             return
         else:
             _game_print("work in progress")
+    def _forcegenitem (self, text : str) -> None:
+        text = text.split(" ")
+        slotid = int(text[0])
+        name = text[1].replace("-", " ")
+        h = int(text[2])
+        a = int(text[3])
+        d = int(text[4])
+        s = int(text[5])
+        m = int(text[6])
+        level = int(text[7]) if len(text) > 7 else 0
+        xp = int(text[8]) if len(text) > 8 else 0
+        xpr = int(text[9]) if len(text) > 9 else 0
+        xpm = float(text[10]) if len(text) > 10 else 0
+        self.player.inventory.slots.append(Item(slotid, name, {"h":h,"a":a,"d":d,"s":s,"m":m}, level, xp, xpr, xpm))
+    def _lootroom (self) -> None:
+        pass
     ## input
     def parse_input (self, text : str) -> None:
         if (_dev):
@@ -578,6 +600,13 @@ class Runner ():
                 text = text.split(" ")
                 self.player.setstat(text[1], int(text[2]))
                 return
+            elif (text.startswith("ses")):
+                text = text.split(" ")
+                self.enemies[int(text[1])].setstat(text[2], int(text[3]))
+                return
+            elif (text.startswith("genitem")):
+                text = text[8:]
+                self._forcegenitem(text)
         # do inventory stuff
         if (self.ininvent):
             self._parse_invent(text)
@@ -614,14 +643,14 @@ class Runner ():
         # loot the room
         elif (text == "loot"):
             if (not self.incombat):
-                pass
+                self._lootroom()
         # peek into another room
         elif (text.startswith("peek")):
             if (not self.incombat):
                 self._peek(text)
         # check player status
         elif (text == "status"):
-            _game_print(f"h={self.player.health}/{self.player.maxh} a={self.player.attack} d={self.player.defense} s={self.player.stamina} m={self.player.mana}")
+            _game_print(f"h={self.player.health}/{self.player.maxh} a={self.player.calc_stat('a')} d={self.player.calc_stat('d')} s={self.player.calc_stat('s')} m={self.player.calc_stat('m')}")
         # regain strength
         elif (text == "rest"):
             self.player.stamina = self.player.maxs

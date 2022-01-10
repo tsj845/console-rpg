@@ -33,6 +33,7 @@ def parse (rawline : str):
     blockdepth = 0
     rawline = rawline.split("\n")
     for i in range(len(rawline)):
+        rawline[i] = rawline[i].lstrip()
         # checks if line has block syntax
         if (blockre.match(rawline[i])):
             # alias
