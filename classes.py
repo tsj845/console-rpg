@@ -299,6 +299,51 @@ class Player ():
         if (self.xp >= self.reqxp):
             self._levelup()
 
+# stores npc data
+class NPC ():
+    ## NPC
+    def __init__ (self, npc : dict, dialog : dict):
+        self.name = npc["name"]
+        self.dialogs = dialog["dialog"]
+        self.linedata = dialog["linedata"]
+        self.active = -1
+        self.pos = 0
+        self._activate()
+    def _activate (self) -> None:
+        for i in range(len(self.dialogs)):
+            item = self.dialogs[i]
+            trig = item["trigger"]
+            if (game.trigresult(trig)):
+                self.active = item["link"]
+                break
+    def _goto (self, g : str) -> int:
+        for i in range(self.pos+1, len(self.linedata[self.active])):
+            x = self.linedata[self.active][i]
+            if (x["type"] == 3 and x["lname"] == g):
+                return i
+    def next (self, op = None):
+        dat = self.linedata[self.active][self.pos]
+        t = int(dat["type"])
+        if (t == 0):
+            self.pos += 1
+            if (self.pos >= len(self.linedata[self.active])):
+                return False
+            return dat["text"]
+        elif (t == 1):
+            if (op != None):
+                if (op in dat["opts"].keys() and dat != "name"):
+                    self.pos = self._goto(dat["opts"][op])
+                    return self.next()
+            else:
+                return dat["text"], list(dat["opts"].keys())[1:]
+        elif (t == 2):
+            self.pos = self._goto(dat["goto"])
+            return self.next()
+        elif (t == 3):
+            self.pos += 1
+            return self.next()
+
+
 # handles top level game logic
 class Runner ():
     ## Runner
@@ -309,12 +354,13 @@ class Runner ():
         # a single room
         self.room_data = {}
         # all the data in the game
-        self.full_data = {"dungeons":[], "npcs":[], "quests":[], "enemies":[], "misc":[]}
+        self.full_data = {"dungeons":[], "npcs":[], "quests":[], "enemies":[], "dialogs":[], "misc":[]}
         self.active_quests = []
         # active enemies/entities
         self.enemies = []
         self.entities = []
         self.netq = []
+        self.active_npc = None
         # game state flags
         self.incombat = False
         self.gameover = False
@@ -444,6 +490,12 @@ class Runner ():
             if (ent["name"] == "CHEST"):
                 ent["unid"] = c
                 c += 1
+    def _upnpunid (self) -> None:
+        c = 0
+        for ent in self.room_data["list"]:
+            if (ent["name"] == "NPC"):
+                ent["unid"] = c
+                c += 1
     ## loading
     def load_area (self, data : dict) -> None:
         self.area_data = data.copy()
@@ -458,7 +510,7 @@ class Runner ():
     def load_full (self, data : list) -> None:
         for i in range(len(data)):
             x = data[i]
-            self.full_data[["dungeons","npcs","quests","enemies","misc"][int(x["did"])]].append(x)
+            self.full_data[["dungeons","npcs","quests","enemies","dialogs","misc"][int(x["did"])]].append(x)
         self.load_area(self.full_data["dungeons"][0])
     def _grabroom (self, uid : str) -> dict:
         for room in self.area_data["rooms"]:
@@ -605,15 +657,52 @@ class Runner ():
             _game_print(f"dropped item from slot {ind+1}")
         elif (text == "fill status"):
             _game_print(f"currently using {len(self.player.inventory.slots)} of {self.player.inventory.maxslots} slots")
+    ## dialog entry
+    def _start_dialog (self, text : str) -> None:
+        if (not text or not text.isdigit()):
+            _game_print("invalid input")
+            return
+        text = int(text)-1
+        npcs = self._ge_all("NPC")
+        if (text < 0 or text >= len(npcs)):
+            _game_print("invalid index")
+            return
+        def grabnpc (nd : dict) -> dict:
+            for n in self.full_data["npcs"]:
+                if (n["nid"] == nd["nid"]):
+                    return n
+        npc = grabnpc(npcs[text])
+        dia = {}
+        for di in self.full_data["dialogs"]:
+            # print(npc)
+            if (di["cid"] == npc["cid"]):
+                dia = di
+                break
+        self.active_npc = NPC(npc, dia)
+        self.indialog = True
+    ## dialog trigger result
+    def trigresult (self, trig) -> bool:
+        return True
     ## dialog input
     def _parse_dialog (self, text : str) -> None:
         if (text == "leave"):
             self.indialog = False
+            self.active_npc = None
             _game_print("leaving dialog")
             sleep(0.25)
             return
+        if (text == ""):
+            r = self.active_npc.next()
+            if (r == None):
+                self._parse_dialog("leave")
+                return
+            if (type(r) == str):
+                _game_print(r)
+            else:
+                _game_print(f"{r[0]}: {', '.join(r[1])}")
         else:
-            _game_print("work in progress")
+            self.active_npc.next(text)
+            # _game_print("work in progress")
     def _forcegenitem (self, text : str) -> None:
         text = text.split(" ")
         slotid = int(text[0])
@@ -685,7 +774,7 @@ class Runner ():
         # talk to npc
         elif (text.startswith("talk")):
             if (not self.incombat):
-                pass
+                self._start_dialog(text[5:])
         # inventory
         elif (text == "inven"):
             self.ininvent = True
@@ -753,6 +842,34 @@ class Runner ():
     ## game lost
     def lostgame (self) -> None:
         _game_print("game over")
+    ## inspect
+    def _inspect (self) -> None:
+        shorts = {}
+        def handleshort (inp : str) -> None:
+            x = int(inp[3])
+            inp = inp[5:]
+            if (x == 0):
+                inp = inp.split("::")
+                shorts[inp[0]] = inp[1]
+            elif (x == 1):
+                shorts.pop(inp)
+            elif (x == 2):
+                print(shorts.keys())
+            elif (x == 3):
+                shorts.clear()
+        def doshorts (inp : str) -> str:
+            for key in shorts.keys():
+                inp = inp.replace(f"^{key}", shorts[key])
+            return inp
+        while True:
+            inp = input("> ")
+            if (inp == "exit"):
+                break
+            inp = doshorts(inp)
+            if (inp.startswith("S:/")):
+                handleshort(inp)
+            else:
+                print(eval(inp))
     ## main start
     def start (self) -> None:
         if (not _dev):
@@ -770,7 +887,7 @@ class Runner ():
                     continue
                 break
             elif (inp == "inspect" and _dev):
-                break
+                self._inspect()
             else:
                 self.parse_input(inp)
             if (self.gameover):

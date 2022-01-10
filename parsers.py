@@ -8,7 +8,7 @@ if len(sys.argv) > 1 and sys.argv[1] == "-pt":
 
 commentre = re.compile("~~.*\n?")
 assignre = re.compile("[^\n]+ = [^\n]+\n?")
-blockre = re.compile("\*\*[\w\s/]*\*\*\n?|\*&[\w\s]*\*\*\n?")
+blockre = re.compile("\*\*[\w\s/-]*\*\*\n?|\*&[\w\s-]*\*\*\n?")
 
 # lines
 lines = []
