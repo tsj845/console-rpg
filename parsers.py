@@ -1,6 +1,6 @@
 import re
 
-commentre = re.compile("~~.*~~\n?")
+commentre = re.compile("~~.*\n?")
 assignre = re.compile("[^\n]+ = [^\n]+\n?")
 blockre = re.compile("\*\*[\w\s/]*\*\*\n?|\*&[\w\s]*\*\*\n?")
 
