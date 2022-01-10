@@ -100,3 +100,25 @@ itemmaxs = (
         ),
     )
 )
+# player item data
+pitemmins = (
+    (
+        n,n,n,n,n,n,n
+    ),
+)
+pitemmaxs = (
+    (
+        u(n,{"d":1,"h":1}),u(n,{"d":2,"h":1}),u(n,{"d":1,"s":1}),u(n,{"d":1,"s":1}),u(n,{"a":3,"s":2}),u(n,{"d":2}),u(n,{"m":1,"s":1,"h":1}),
+    ),
+)
+pitemnames = (
+    (
+        ("iron helm", "basic helmet"),
+        ("iron plating", "basic armor"),
+        ("iron shinguards", "basic leg protectors"),
+        ("iron boots", "basic footware"),
+        ("steel sword", "blunt object"),
+        ("wooden shield", "really bad damage blocker"),
+        ("locket", "cursed item")
+    ),
+)

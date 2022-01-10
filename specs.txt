@@ -42,6 +42,7 @@ content.amly {
                 "nid" - id of this npc
                 "name" - name of npc
                 currently not fully developed no further specs available
+                see "npc dialog" for roadmap
             }
             2 {
                 - quest
@@ -111,6 +112,33 @@ content.amly {
             - used to set stat values on a specific enemy
             [statid] + "abs"=[value]
         }
+    }
+    npc dialog {
+        -- use flat list named "dialog"
+        subblocks {
+            -- may be named anything
+            -- the first dialog to have a matched trigger will be used for the npc
+            trigger - [dialog trigger] see "npc dialog trigger"
+            link - [dialog block] (optional?) see "npc d-blocks"
+        }
+    }
+    npc d-blocks {
+        -- use flat list named "linedata" as container
+        dblocks {
+            -- use flat list named "[block name]"
+            see "npc line specs"
+        }
+    }
+    npc line specs {
+        type - [line type (0, 1, 2, 3)]
+        text - [display text] (for [type=(0, 1)])
+        opts - [OPTGROUP] (for [type=(1)]) see "optgroups"
+        goto - [lname] (for [type=(2)])
+        lname - [uid] (for [type=(3)])
+    }
+    optgroups {
+        -- datstruct name="OPTG"
+        *args - "[argn]=[lname]" where [argn] = arg number && [lname] = [uid] for dblock[type=3]
     }
 }
 

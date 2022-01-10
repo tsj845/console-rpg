@@ -7,7 +7,7 @@ if (len(sys.argv) > 1):
 else:
     _dev = False
 
-from datatables import itemmaxs, itemnamesets, itemmins, bodyslotnames, enemymins, enemymaxs
+from datatables import itemmaxs, itemnamesets, itemmins, bodyslotnames, enemymins, enemymaxs, pitemmins, pitemmaxs, pitemnames
 from random import choice, randrange
 from numpy import ceil, floor
 from time import sleep
@@ -108,7 +108,13 @@ class ItemManager ():
         names = names[2:]
         return classi[0], [Item(self.slotnames[i], names[i], self.gri__gen_stats(typeid, level, i, ind), reqxp=1, levelmod=1) if names[i] != None else None for i in range(7)]
     def genitem (self, level : int = 0):
-        pass
+        slot = randrange(0, len(bodyslotnames))
+        print(len(pitemmins[level]), slot)
+        mins = pitemmins[level][slot]
+        maxs = pitemmaxs[level][slot]
+        stats = {"h":randrange(mins["h"],maxs["h"]+1),"a":randrange(mins["a"],maxs["a"]+1),"m":randrange(mins["m"],maxs["m"]+1),"s":randrange(mins["s"],maxs["s"]+1),"d":randrange(mins["d"],maxs["d"]+1)}
+        name = choice(pitemnames[level][slot])
+        return Item(slot, name, stats, levelmod=1)
 
 ItemManager = ItemManager()
 
@@ -379,6 +385,8 @@ class Runner ():
             self.enemies.append(ene)
             self.netq.append(ene)
         self.incombat = True
+        _game_print("entering combat...")
+        self.trigger_event("combat", "start")
     def _enemy_atk (self) -> None:
         en = self.netq.pop(0)
         self.netq.append(en)
@@ -395,6 +403,7 @@ class Runner ():
         if (self.player.takedmg(en.calc_stat("a"))):
             _game_print(f"enemy {e} killed you")
             self.gameover = True
+            self.trigger_event("combat", "lose")
     def _attack (self, text : str) -> None:
         if (self.player.stamina == 0):
             _game_print("you don't have the strength left to do that")
@@ -425,8 +434,16 @@ class Runner ():
             if (len(self.enemies) == 0):
                 self.incombat = False
                 self.player.reset_values()
+                _game_print("exiting combat...")
+                self.trigger_event("combat", "win")
         if (len(self.enemies) > 0):
             self._enemy_atk()
+    def _upltunid (self) -> None:
+        c = 0
+        for ent in self.room_data["list"]:
+            if (ent["name"] == "CHEST"):
+                ent["unid"] = c
+                c += 1
     ## loading
     def load_area (self, data : dict) -> None:
         self.area_data = data.copy()
@@ -435,6 +452,7 @@ class Runner ():
     def load_room (self, data : dict) -> None:
         self.room_data = data
         self.room_data["visit"] = None
+        self._upltunid()
         self.trigger_event("load", "room", data)
         self._check_combat()
     def load_full (self, data : list) -> None:
@@ -564,12 +582,29 @@ class Runner ():
                     _game_print(f"{key} : {x if x != None else 'empty'}")
         elif (text.startswith("equip")):
             text = text.split(" ")
-            if (len(text) < 3 or text[1] not in bodyslotnames):
+            if (len(text) < 3 or text[1] not in bodyslotnames or not text[2].isdigit()):
+                _game_print("invalid equip command")
                 return
-            if (self.player.inventory.equip(text[1], int(text[2])-1)):
+            ind = int(text[2])-1
+            if (ind < 0 or ind >= len(self.player.inventory.slots)):
+                _game_print("invalid index")
+                return
+            if (self.player.inventory.equip(text[1], ind)):
                 _game_print("item equipped")
             else:
                 _game_print("failed to equip item")
+        elif (text.startswith("drop")):
+            if (len(text.split(" ")) < 2 or not text.split(" ")[1].isdigit()):
+                _game_print("invalid drop command")
+                return
+            ind = int(text.split(" ")[1])-1
+            if (ind < 0 or ind >= len(self.player.inventory.slots)):
+                _game_print("invalid item index")
+                return
+            self.player.inventory.remove(ind)
+            _game_print(f"dropped item from slot {ind+1}")
+        elif (text == "fill status"):
+            _game_print(f"currently using {len(self.player.inventory.slots)} of {self.player.inventory.maxslots} slots")
     ## dialog input
     def _parse_dialog (self, text : str) -> None:
         if (text == "leave"):
@@ -593,31 +628,37 @@ class Runner ():
         xpr = int(text[9]) if len(text) > 9 else 0
         xpm = float(text[10]) if len(text) > 10 else 0
         self.player.inventory.slots.append(Item(slotid, name, {"h":h,"a":a,"d":d,"s":s,"m":m}, level, xp, xpr, xpm))
-    def _lootroom (self) -> None:
-        chests = []
-        ol = len(self.room_data["list"])
-        for i in range(ol):
-            i = ol - i - 1
+    def _lootroom (self, text : str) -> None:
+        if (len(self.player.inventory.slots) >= self.player.inventory.maxslots):
+            _game_print("you don't have room in your inventory")
+            return
+        text = int(text)
+        for i in range(len(self.room_data["list"])):
             ent = self.room_data["list"][i]
-            if (ent["name"] == "CHEST"):
-                chests.append(ent)
+            if (ent["name"] == "CHEST" and ent["unid"] == text):
                 self.room_data["list"].pop(i)
-        for c in chests:
-            self.player.inventory.add(ItemManager.genitem(int(c["level"])))
+                self._upltunid()
+                item = ItemManager.genitem(int(ent["level"]))
+                self.player.inventory.add(item)
+                _game_print(f"you got: lvl {int(ent['level'])} {item.name}")
+                break
     ## input
     def parse_input (self, text : str) -> None:
         if (_dev):
-            if (text.startswith("sps")):
-                text = text.split(" ")
-                self.player.setstat(text[1], int(text[2]))
-                return
-            elif (text.startswith("ses")):
-                text = text.split(" ")
-                self.enemies[int(text[1])].setstat(text[2], int(text[3]))
-                return
-            elif (text.startswith("genitem")):
-                text = text[8:]
-                self._forcegenitem(text)
+            try:
+                if (text.startswith("sps")):
+                    text = text.split(" ")
+                    self.player.setstat(text[1], int(text[2]))
+                    return
+                elif (text.startswith("ses")):
+                    text = text.split(" ")
+                    self.enemies[int(text[1])].setstat(text[2], int(text[3]))
+                    return
+                elif (text.startswith("genitem")):
+                    text = text[8:]
+                    self._forcegenitem(text)
+            except IndexError:
+                _game_print("something went wrong")
         # do inventory stuff
         if (self.ininvent):
             self._parse_invent(text)
@@ -652,9 +693,9 @@ class Runner ():
             sleep(0.25)
             _game_print("", end="")
         # loot the room
-        elif (text == "loot"):
+        elif (text.startswith("loot")):
             if (not self.incombat):
-                self._lootroom()
+                self._lootroom(text[5:])
         # peek into another room
         elif (text.startswith("peek")):
             if (not self.incombat):
@@ -727,6 +768,8 @@ class Runner ():
                     break
                 if (input("type \"yes\" to confirm: ") != "yes"):
                     continue
+                break
+            elif (inp == "inspect" and _dev):
                 break
             else:
                 self.parse_input(inp)

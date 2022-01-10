@@ -1,4 +1,10 @@
 import re
+import sys
+
+_dev = False
+
+if len(sys.argv) > 1 and sys.argv[1] == "-pt":
+    _dev = True
 
 commentre = re.compile("~~.*\n?")
 assignre = re.compile("[^\n]+ = [^\n]+\n?")
@@ -6,7 +12,7 @@ blockre = re.compile("\*\*[\w\s/]*\*\*\n?|\*&[\w\s]*\*\*\n?")
 
 # lines
 lines = []
-with open("content.amly") as f:
+with open("content.amly" if not _dev else "pt.amly") as f:
     lines = f.read().split("```")
 
 # final data list
@@ -135,6 +141,10 @@ def parse (rawline : str):
                 cb = getcb()
                 if (blockdepth == 0):
                     flatlist = False
+                elif (type(cb) == list):
+                    flatlist = True
+                else:
+                    flatlist = False
             else:
                 # creates new block
                 blockdepth += 1
@@ -145,14 +155,16 @@ def parse (rawline : str):
                     cb = cb[blockname]
                     blockpath.append(blockname)
                 else:
-                    if (flatlist and blockdepth == 2):
+                    if (flatlist):
                         cb.append({"list":[], "uid":blockname})
                         blockpath.append(len(cb)-1)
                         cb = cb[-1]
                     else:
+                        # print(cb, blockpath)
                         cb[blockname] = {"list":[]}
                         cb = cb[blockname]
                         blockpath.append(blockname)
+                    flatlist = False
         # checks for assignment
         elif (assignre.match(line)):
             line = line.split(" = ")
@@ -185,4 +197,5 @@ for i in range(lines.count("\n")):
 for lineind in range(len(lines)):
     parse(lines[lineind])
 
-# print(datums[0])
+if (_dev):
+    print(datums[0])
