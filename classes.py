@@ -342,11 +342,44 @@ class NPC ():
             self.pos += 1
             return self.next()
 
+# manages tasks
+class Task ():
+    ## Task
+    def __init__ (self, data : dict):
+        self.text = data["text"]
+        self.instructions = data["instructions"]
+        self.comptext = data["comptext"]
+        self.trigger = data["trigger"]
+        if ("triggers" in data):
+            self.triggers = data["triggers"]
+        else:
+            self.triggers = [data["trigger"]]
+            self.trigger = {"name":"COMPOUND", "req":"all"}
+        self.rewards = data["rewards"] if "rewards" in data else []
+    # runs checks to see if the task is complete
+    def check (self) -> bool:
+        state = {"all":0,"any":1}[self.trigger["req"]]
+        for trigger in self.triggers:
+            r = game.check_qt_trigger(trigger)
+            if (state == 0 and not r):
+                return False
+            elif (state == 1 and r):
+                return True
+        if (state == 0):
+            return True
+        elif (state == 1):
+            return False
+
 # handles quest stuff
 class Quest ():
     ## Quest
     def __init__ (self, qo : dict):
-        pass
+        self.name = qo["name"]
+        self.comptext = qo["comptext"]
+        self.retreq = qo["return"] == "yes"
+        self.tasks = [Task(qo["tasks"][i]) for i in range(len(qo["tasks"]))]
+        self.rewards = qo["rewards"]
+        self.prog = qo["prog"]
 
 # handles top level game logic
 class Runner ():
@@ -394,6 +427,13 @@ class Runner ():
             if (ent["name"] == typename):
                 ents.append(ent)
         return ents
+    ## triggers
+    def trigresult (self, trig : str) -> bool:
+        if (trig == "always"):
+            return True
+        return False
+    def check_qt_trig (self, trig : dict):
+        return False
     ## combat
     def _form_endat (self, data : dict) -> Union[Tuple[int, int], Tuple[int, int, dict]]:
         def geten (eid : str) -> dict:
@@ -686,9 +726,6 @@ class Runner ():
         flavor = ("you strike a conversation with", "you start talking to", "you initiate data transfer protocols with")
         _game_print(f"{choice(flavor)} {self.active_npc.name}")
         self._parse_dialog("", True)
-    ## dialog trigger result
-    def trigresult (self, trig) -> bool:
-        return True
     ## dialog input
     def _parse_dialog (self, text : str, k : bool = False) -> None:
         if (text == "leave"):
