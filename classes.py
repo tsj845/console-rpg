@@ -1,6 +1,7 @@
 _dev = True
 
 import sys
+import readline
 from typing import Tuple, Union, Any
 
 if (len(sys.argv) > 1):
@@ -341,6 +342,8 @@ class NPC ():
         elif (t == 3):
             self.pos += 1
             return self.next()
+    def done (self) -> bool:
+        return self.pos >= len(self.linedata[self.active])
 
 # manages tasks
 class Task ():
@@ -429,8 +432,11 @@ class Runner ():
         return ents
     ## triggers
     def trigresult (self, trig : str) -> bool:
-        if (trig == "always"):
-            return True
+        if (trig["type"] == "lit"):
+            if (trig["con"] == "always"):
+                return True
+            elif (trig["con"] == "never"):
+                return False
         return False
     def check_qt_trig (self, trig : dict):
         return False
@@ -711,6 +717,7 @@ class Runner ():
         if (text < 0 or text >= len(npcs)):
             _game_print("invalid index")
             return
+        self._save_hist_scope()
         def grabnpc (nd : dict) -> dict:
             for n in self.full_data["npcs"]:
                 if (n["nid"] == nd["nid"]):
@@ -731,8 +738,9 @@ class Runner ():
         if (text == "leave"):
             self.indialog = False
             self.active_npc = None
-            _game_print("leaving dialog")
+            _game_print("leaving dialog...")
             sleep(0.25)
+            self._load_hist_scope()
             return
         if (text == ""):
             if (not k):
@@ -747,6 +755,8 @@ class Runner ():
                 _game_print(f"{r[0]}: {', '.join(r[1])}")
         else:
             _game_print(self.active_npc.next(text))
+        if (self.active_npc.done()):
+            self._parse_dialog("leave")
     def _forcegenitem (self, text : str) -> None:
         text = text.split(" ")
         slotid = int(text[0])
@@ -917,6 +927,12 @@ class Runner ():
                     print(eval(inp))
                 except:
                     print("something went wrong")
+    ## history
+    def _save_hist_scope (self, clear : bool = True) -> None:
+        readline.write_history_file("history.txt")
+        readline.clear_history()
+    def _load_hist_scope (self) -> None:
+        readline.read_history_file("history.txt")
     ## main start
     def start (self) -> None:
         if (not _dev):

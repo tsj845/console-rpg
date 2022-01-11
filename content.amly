@@ -36,7 +36,7 @@
     cid = 0
     *&dialog**
         **d1**
-            trigger = always
+            trigger = <TRIG type=lit con=always>
             link = d-1
         **/d1**
     **/dialog**
