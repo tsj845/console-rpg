@@ -41,6 +41,8 @@ def parse (rawline : str):
         l = rawline[i]
         if (l.startswith("~~")):
             rawline.pop(i)
+        else:
+            rawline[i] = l.replace("\\n", "\n")
     for i in range(len(rawline)):
         rawline[i] = rawline[i].lstrip()
         # checks if line has block syntax

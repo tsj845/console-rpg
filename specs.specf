@@ -1,31 +1,83 @@
+##INDEX
+UID INDEX {
+    UID INDEX - ##INDEX
+    game running - ##UID0
+    game running -> dev mod - ##UID0-0
+    game running -> dev mode -> dev commands - ##UID01-0
+    content.amly - ##UID1
+    content.amly -> notes - ##UID1-0
+    content.amly -> syntax - ##UID1-1
+    content.amly -> syntax -> amly doc def - ##UID11-0
+    content.amly -> syntax -> "did" - ##UID11-1
+    content.amly -> syntax -> did -> 0 - ##UID111-0
+    content.amly -> syntax -> did -> 0 -> room - ##UID1110-0
+    content.amly -> syntax -> did -> 1 - ##UID111-1
+    content.amly -> syntax -> did -> 2 - ##UID111-2
+    content.amly -> syntax -> did -> 2 -> task defs - ##UID1112-0
+    content.amly -> syntax -> did -> 2 -> reward defs - ##UID1112-1
+    content.amly -> syntax -> did -> 3 - ##UID111-3
+    content.amly -> syntax -> comments - ##UID11-2
+    content.amly -> syntax -> blocks - ##UID11-3
+    content.amly -> syntax -> entity defs - ##UID11-4
+    content.amly -> syntax -> item defs - ##UID11-5
+    content.amly -> syntax -> other defs - ##UID11-6
+    content.amly -> syntax -> abs vals - ##UID11-7
+    content.amly -> npc dialog - ##UID1-2
+    content.amly -> npc d-blocks - ##UID1-3
+    content.amly -> npc line specs - ##UID1-4
+    content.amly -> optgroups - ##UID1-5
+    content.amly -> rewards defining - ##UID1-6
+    content.amly -> rewards defining -> xp def - ##UID1-2
+    content.amly -> rewards defining -> upgrade def - ##UID1-2
+    content.amly -> upgrade targets - ##UID1-7
+    content.amly -> upgrade targets -> "inv-slots" - ##UID17-0
+    content.amly -> triggers - ##UID1-8
+    content.amly -> triggers -> compound triggers - ##UID18-0
+    // save undefined numerical id not ready
+    save.tssvf - ##UID--SVUNDEF--NUMID--NR
+}
+
+##UID0
 game running {
     if any args are passed to the script then dev mode will be activated, the number and content of args is unused
 
+    ##UID0-0
     dev mode {
         allows use of dev commands
         quit doesn't require confirmation
         'tutorial' is not displayed on start
         unvisited areas will be displayed in "list rooms" they will be displayed as "[room name] (unvisited)" to avoid confusion
 
+        ##UID01-0
         dev commands {
             sps - sets player stat value, "sps [statid] [value]"
+            ses - sets enemy stat value, "ses [eid] [statid] [value]"
+            genitem - generates an item in the player's inventory regardless of slot capacity, "genitem [slotid] [name (replace spaces with '-')] [health] [attack] [defense] [stamina] [mana] (further arguments are optional and all default to zero) [level] [xp] [xpr] [xpm]"
         }
     }
 }
 
+##UID1
 content.amly {
     - stores all game content
+    ##UID1-0
     notes {
         leading and trailing whitespace is always removed before any line processing, so feel free to use indentation to help organize
+
+        "\n" will not be used to split lines but will be replaced with an actual newline when the document is parsed allowing for multiline stuff if you need that
     }
+    ##UID1-1
     syntax {
+        ##UID11-0
         amly document def {
             ```
             document content
             ```
         }
+        ##UID11-1
         "did" {
             - document type id
+            ##UID111-0
             0 {
                 - location
                 "ac" - area count (may be removed later)
@@ -34,36 +86,47 @@ content.amly {
                 "cons" - flat list of connections (may be removed later)
                 "startroom" - name of room that the player should start in
 
+                ##UID1110-0
                 room {
                     - dict block
                     contains entity defs
                 }
             }
+            ##UID111-1
             1 {
                 - quest giver / npc
                 "qid" - id of quest (changes may be made to this)
                 "nid" - id of this npc
                 "name" - name of npc
                 currently not fully developed no further specs available
-                see "npc dialog" for roadmap
+                see "npc dialog" for roadmap UID1-2
             }
+            ##UID111-2
             2 {
                 - quest
                 "qid" - id of quest
                 "name" - name of quest
                 "tasks" - flat list containing task defs
                 "rewards" - flat list containing reward defs
+                "return" - specifies if the player needs to return to the quest giver to complete the quest
 
+                ##UID1112-0
                 task defs {
                     - dict block
                     "text" - text displayed when displaying task
-                    "trigger" - not fully developed
+                    "instructions" - text displayed to player when focusing on task
+                    "comptext" - text displayed when player completes task
+                    "trigger" - [trigger def] see "triggers" UID1-8 || [cts def] see "triggers -> compound triggers" UID18-0
+                    "triggers" - flat list, optional, only used when "trigger" is a "cts def"
+                    "rewards" - optional, see "reward defs" UID1112-1
                 }
+                ##UID1112-1
                 reward defs {
-                    <XP amount=[amount]> || [item def]
+                    <XP amount=[amount]> || [item def] || [upgrade def], see "rewards defining" UID1-6
                 }
                 currently not fully developed no further specs available
             }
+            ##UID111-3
             3 {
                 - predef enemy
                 "eid" - id of enemy
@@ -83,16 +146,20 @@ content.amly {
                 }
             }
         }
+        ##UID11-2
         comments - ~~ comment text, no multiline comments
+        ##UID11-3
         blocks {
             list - *&name** -> data -> **/name**, lists can only be used at the top level
             dict - **name** -> data -> **/name**, can be used at any level
         }
+        ##UID11-4
         entity defs {
             <[entity type (all caps)] *args>
             - args seperated by spaces
             - any strings containing spaces must be quoted
         }
+        ##UID11-5
         item defs {
             ent type - ITEM
             level - item level
@@ -105,46 +172,83 @@ content.amly {
             mmod - mana mod
             name - item name
         }
+        ##UID11-6
         other defs {
             ENEMY - type, level, [*abs vals] || eid=[predef en id]
-            CHEST - level (work in progress)
+            CHEST - level
             NPC - nid=[npc id]
             CON - target=[room name], CON defs are used to display connections with "list doors"
         }
+        ##UID11-7
         abs vals {
             - used to set stat values on a specific enemy
             [statid] + "abs"=[value]
         }
     }
+    ##UID1-2
     npc dialog {
         -- use flat list named "dialog"
         subblocks {
             -- may be named anything
             -- the first dialog to have a matched trigger will be used for the npc
             trigger - [dialog trigger] see "npc dialog trigger"
-            link - [dialog block] (optional?) see "npc d-blocks"
+            link - [dialog block] (optional?) see "npc d-blocks" UID1-3
         }
     }
+    ##UID1-3
     npc d-blocks {
         -- use flat list named "linedata" as container
         dblocks {
             -- use flat list named "[block name]"
-            see "npc line specs"
+            see "npc line specs" UID1-4
         }
     }
+    ##UID1-4
     npc line specs {
         type - [line type (0, 1, 2, 3)]
         text - [display text] (for [type=(0, 1)])
-        opts - [OPTGROUP] (for [type=(1)]) see "optgroups"
+        opts - [OPTGROUP] (for [type=(1)]) see "optgroups" UID1-5
         goto - [lname] (for [type=(2)])
         lname - [uid] (for [type=(3)])
     }
+    ##UID1-5
     optgroups {
         -- datstruct name="OPTG"
         *args - "[argn]=[lname]" where [argn] = arg number && [lname] = [uid] for dblock[type=3]
     }
+    ##UID1-6
+    rewards defining {
+        -- data struct
+        can be [xp def] || [item def] (see "syntax -> item defs" UID11-5) || [upgrade def]
+
+        ##UID16-0
+        xp def {
+            type = XP
+            amount - amount of xp
+        }
+        ##UID16-1
+        upgrade def {
+            type = UPG
+            target - target of upgrade, see "upgrade targets"
+            *[arg key] - extra data specific to upgrade target, see "upgrade targets"
+        }
+    }
+    ##UID1-7
+    upgrade targets {
+        ##UID17-0
+        "inv-slots" {
+            -- upgrades player inventory capacity
+            "amount" - number of slots to add
+        }
+    }
+    ##UID1-8
+    triggers {
+        ##UID18-0
+        compound triggers {}
+    }
 }
 
+##UID--SVUNDEF--NUMID--NR
 save.tssvf {
     specifications are not and will not be defined until most of the game is done so that specifications will not need constant updating to accomedate basic features
 }
