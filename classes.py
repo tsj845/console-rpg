@@ -2,9 +2,9 @@ _dev = True
 
 import sys
 import readline
-from typing import Tuple, Union, Any
+from typing import Dict, List, Tuple, Union, Any
 
-if (len(sys.argv) > 1):
+if ("-s" in sys.argv):
     _dev = True
 else:
     _dev = False
@@ -24,13 +24,13 @@ def _run_teach () -> None:
 # stores level up reward data
 class LevelRewards ():
     ## LevelRewards
-    def __init__ (self):
-        self.health = 10
-        self.mana = 5
-        self.stamina = 5
-        self.defense = 1
-        self.attack = 1
-        self.mods = 1.5
+    def __init__ (self) -> None:
+        self.health : int = 10
+        self.mana : int = 5
+        self.stamina : int = 5
+        self.defense : int = 1
+        self.attack : int = 1
+        self.mods : float = 1.5
     def level (self) -> None:
         self.health = floor(self.health * self.mods)
         self.mana = floor(self.mana * self.mods)
@@ -48,15 +48,15 @@ class LevelRewards ():
 # holds item data
 class Item ():
     ## Item
-    def __init__ (self, it : int, name : str, stats : dict, level : int = 0, xp : int = 0, reqxp : int = 5, levelmod : float = 1.2):
-        self.type = it
-        self.name = name
-        self.stats = stats
-        self.level = level
-        self.xp = xp
-        self.reqxp = reqxp
-        self.levelmod = levelmod
-        self.lr = LevelRewards()
+    def __init__ (self, it : int, name : str, stats : Dict[str, int], level : int = 0, xp : int = 0, reqxp : int = 5, levelmod : float = 1.2) -> None:
+        self.type : int = it
+        self.name : str = name
+        self.stats : Dict[str, int] = stats
+        self.level : int = level
+        self.xp : int = xp
+        self.reqxp : int = reqxp
+        self.levelmod : float = levelmod
+        self.lr : LevelRewards = LevelRewards()
         self.lr.setall(*stats["upgrades"] if "upgrades" in stats.keys() else [0, 0, 0, 0, 0])
     def _levelup (self) -> None:
         self.xp -= self.reqxp
@@ -84,36 +84,36 @@ class Item ():
 # handles complex item tasks
 class ItemManager ():
     ## ItemManager
-    def __init__ (self):
-        self.namesets = itemnamesets
-        self.slotnames = bodyslotnames
-        self.mins = itemmins
-        self.maxs = itemmaxs
+    def __init__ (self) -> None:
+        self.namesets : tuple = itemnamesets
+        self.slotnames : Tuple[str] = bodyslotnames
+        self.mins : tuple = itemmins
+        self.maxs : tuple = itemmaxs
     def _target (self, value : Any, index : int, iterable : list) -> list:
-        final = []
+        final : List[Any] = []
         for item in iterable:
             if (item[index] == value):
                 final.append(item)
         return final
     def gri__get_names (self, x : int, level : int) -> tuple:
-        lst = self._target(x, 1, self.namesets[level])
-        ind = randrange(0, len(lst))
+        lst : Tuple[str, int, Union[None, Dict[str, int]]] = self._target(x, 1, self.namesets[level])
+        ind : int = randrange(0, len(lst))
         return lst[ind], ind
-    def gri__gen_stats (self, typeid : int, level : int, slotid : int, ind : int) -> dict:
-        mins = self.mins[level][typeid][ind][slotid]
-        maxs = self.maxs[level][typeid][ind][slotid]
+    def gri__gen_stats (self, typeid : int, level : int, slotid : int, ind : int) -> Dict[str, int]:
+        mins : Dict[str, int] = self.mins[level][typeid][ind][slotid]
+        maxs : Dict[str, int] = self.maxs[level][typeid][ind][slotid]
         return {"h":randrange(mins["h"],maxs["h"]+1),"a":randrange(mins["a"],maxs["a"]+1),"m":randrange(mins["m"],maxs["m"]+1),"s":randrange(mins["s"],maxs["s"]+1),"d":randrange(mins["d"],maxs["d"]+1)}
     def get_rand_itemset (self, level : int, typeid : int) -> tuple:
         names, ind = self.gri__get_names(typeid, level)
-        classi = names[:2]
-        names = names[2:]
+        classi : List[Union[str, int]] = names[:2]
+        names : List[Dict[str, int]] = names[2:]
         return classi[0], [Item(self.slotnames[i], names[i], self.gri__gen_stats(typeid, level, i, ind), reqxp=1, levelmod=1) if names[i] != None else None for i in range(7)]
     def genitem (self, level : int = 0) -> Item:
-        slot = randrange(0, len(bodyslotnames))
-        mins = pitemmins[level][slot]
-        maxs = pitemmaxs[level][slot]
+        slot : int = randrange(0, len(bodyslotnames))
+        mins : Dict[str, int] = pitemmins[level][slot]
+        maxs : Dict[str, int] = pitemmaxs[level][slot]
         stats = {"h":randrange(mins["h"],maxs["h"]+1),"a":randrange(mins["a"],maxs["a"]+1),"m":randrange(mins["m"],maxs["m"]+1),"s":randrange(mins["s"],maxs["s"]+1),"d":randrange(mins["d"],maxs["d"]+1)}
-        name = choice(pitemnames[level][slot])
+        name : str = choice(pitemnames[level][slot])
         return Item(slot, name, stats, levelmod=1)
 
 ItemManager = ItemManager()
@@ -121,11 +121,11 @@ ItemManager = ItemManager()
 # enemy inventory, seperate because the inventory consists only of equipped items and is not normally modified
 class EnemyInventory ():
     ## EnemyInventory
-    def __init__ (self, level : int, typeid : int, preset : Union[None, dict] = None):
-        self.level = level
-        self.classi = typeid
-        self.name = "unset"
-        self.slots = {"head":None, "body":None, "legs":None, "boots":None, "weapon":None, "shield":None, "charm":None}
+    def __init__ (self, level : int, typeid : int, preset : Union[None, dict] = None) -> None:
+        self.level : int = level
+        self.classi : int = typeid
+        self.name : str = "unset"
+        self.slots : Dict[str, Union[None, Item]] = {"head":None, "body":None, "legs":None, "boots":None, "weapon":None, "shield":None, "charm":None}
         # if preset was given do that
         if (preset != None):
             self.slots = preset["slots"]
@@ -144,7 +144,7 @@ class EnemyInventory ():
                 self.slots[key].setstat(statid, value)
     # calculates a stat
     def calc_stat (self, stat : str) -> int:
-        total = 0
+        total : int = 0
         for key in self.slots.keys():
             if (self.slots[key] == None):
                 continue
@@ -154,28 +154,28 @@ class EnemyInventory ():
 # stores data about an enemy
 class Enemy ():
     ## Enemy
-    def __init__ (self, typeid : int, level : int, preset : Union[None, dict] = None):
-        self.typeid = typeid
-        self.level = level
-        mins = enemymins[level][typeid]
-        maxs = enemymaxs[level][typeid]
-        self.inven = EnemyInventory(level, typeid, preset)
-        self.name = self.inven.name
+    def __init__ (self, typeid : int, level : int, preset : Union[None, dict] = None) -> None:
+        self.typeid : int = typeid
+        self.level : int = level
+        mins : Dict[str, int] = enemymins[level][typeid]
+        maxs : Dict[str, int] = enemymaxs[level][typeid]
+        self.inven : EnemyInventory = EnemyInventory(level, typeid, preset)
+        self.name : str = self.inven.name
         if (preset != None):
-            self.health = preset["health"]
-            self.defense = preset["defense"]
-            self.attack = preset["attack"]
-            self.stamina = preset["stamina"]
-            self.mana = preset["mana"]
+            self.health : int = preset["health"]
+            self.defense : int = preset["defense"]
+            self.attack : int = preset["attack"]
+            self.stamina : int = preset["stamina"]
+            self.mana : int = preset["mana"]
         else:
-            self.health = randrange(mins["h"], maxs["h"]+1)
-            self.defense = randrange(mins["d"], maxs["d"]+1)
-            self.mana = randrange(mins["m"], maxs["m"]+1)
-            self.stamina = randrange(mins["s"], maxs["s"]+1)
-            self.attack = randrange(mins["a"], maxs["a"]+1)
-        self.maxhealth = self.health
-        self.maxstamina = self.stamina
-        self.maxmana = self.mana
+            self.health : int = randrange(mins["h"], maxs["h"]+1)
+            self.defense : int = randrange(mins["d"], maxs["d"]+1)
+            self.mana : int = randrange(mins["m"], maxs["m"]+1)
+            self.stamina : int = randrange(mins["s"], maxs["s"]+1)
+            self.attack : int = randrange(mins["a"], maxs["a"]+1)
+        self.maxhealth : int = self.health
+        self.maxstamina : int = self.stamina
+        self.maxmana : int = self.mana
     def calc_stat (self, statid : str) -> int:
         return {"h":self.health,"a":self.attack,"d":self.defense,"s":self.stamina,"m":self.mana}[statid] + self.inven.calc_stat(statid)
     def setstat (self, statid : str, value : int) -> None:
@@ -191,7 +191,7 @@ class Enemy ():
             self.mana = value
         self.inven.setstat(statid, value)
     def takedmg (self, amount : int) -> bool:
-        amount = max(0, amount - self.calc_stat("d"))
+        amount : int = max(0, amount - self.calc_stat("d"))
         self.health -= amount
         if (self.health <= 0):
             return True
@@ -201,10 +201,10 @@ class Enemy ():
 # player inventory
 class PlayerInventory ():
     ## PlayerInventory
-    def __init__ (self):
-        self.slots = []
-        self.maxslots = 10
-        self.body = {"head":None, "body":None, "legs":None, "boots":None, "weapon":None, "shield":None, "charm":None}
+    def __init__ (self) -> None:
+        self.slots : List[Item] = []
+        self.maxslots : int = 10
+        self.body : Dict[str, Union[None, Item]] = {"head":None, "body":None, "legs":None, "boots":None, "weapon":None, "shield":None, "charm":None}
     def add (self, item : Item) -> bool:
         if (len(self.slots) >= self.maxslots):
             return False
@@ -224,7 +224,7 @@ class PlayerInventory ():
         self.body[slot] = self.slots.pop(index)
         return True
     def calc_stat (self, stat : str) -> int:
-        total = 0
+        total : int = 0
         for key in self.body.keys():
             if (self.body[key] == None):
                 continue
@@ -234,22 +234,22 @@ class PlayerInventory ():
 # stores player data
 class Player ():
     ## Player
-    def __init__ (self):
-        self.shield = 0
-        self.maxh = 10
-        self.health = 10
-        self.attack = 1
-        self.defense = 0
-        self.maxm = 0
-        self.mana = 0
-        self.maxs = 5
-        self.stamina = 5
-        self.xp = 0
-        self.level = 0
-        self.levelingmod = 1.2
-        self.reqxp = 5
-        self.levrew = LevelRewards()
-        self.inventory = PlayerInventory()
+    def __init__ (self) -> None:
+        self.shield : int = 0
+        self.maxh : int = 10
+        self.health : int = 10
+        self.attack : int = 1
+        self.defense : int = 0
+        self.maxm : int = 0
+        self.mana : int = 0
+        self.maxs : int = 5
+        self.stamina : int = 5
+        self.xp : int = 0
+        self.level : int = 0
+        self.levelingmod : float = 1.2
+        self.reqxp : int = 5
+        self.levrew : LevelRewards = LevelRewards()
+        self.inventory : PlayerInventory = PlayerInventory()
     def _levelup (self) -> None:
         self.xp -= self.reqxp
         self.level += 1
@@ -270,7 +270,7 @@ class Player ():
     def calc_stat (self, statid : str) -> int:
         return {"h":self.health,"a":self.attack,"d":self.defense,"s":self.stamina,"m":self.mana}[statid] + self.inventory.calc_stat(statid)
     def setstat (self, statid : str, value : int) -> None:
-        x = None
+        x : Union[None, str] = None
         if (statid == "h"):
             self.health = value
             x = "health"
@@ -288,7 +288,7 @@ class Player ():
             x = "mana"
         _game_print(f"player stat {x} set to {value}" if x != None else f"failed to set player stat {statid}")
     def takedmg (self, amount : int) -> bool:
-        amount = max(0, amount - self.calc_stat("d"))
+        amount : int = max(0, amount - self.calc_stat("d"))
         self.health -= amount
         if (self.health <= 0):
             return True
@@ -302,30 +302,30 @@ class Player ():
 # stores npc data
 class NPC ():
     ## NPC
-    def __init__ (self, npc : dict, dialog : dict):
-        self.name = npc["name"]
-        self.dialogs = dialog["dialog"]
-        self.linedata = dialog["linedata"]
-        self.active = -1
-        self.pos = 0
+    def __init__ (self, npc : dict, dialog : dict) -> None:
+        self.name : str = npc["name"]
+        self.dialogs : List[dict] = dialog["dialog"]
+        self.linedata : List[dict] = dialog["linedata"]
+        self.active : int = -1
+        self.pos : int = 0
         self._activate()
     def _activate (self) -> None:
         for i in range(len(self.dialogs)):
-            item = self.dialogs[i]
-            trig = item["trigger"]
+            item : dict = self.dialogs[i]
+            trig : dict = item["trigger"]
             if (game.trigresult(trig)):
                 self.active = item["link"]
                 break
     def _goto (self, g : str) -> int:
         for i in range(self.pos+1, len(self.linedata[self.active])):
-            x = self.linedata[self.active][i]
+            x : dict = self.linedata[self.active][i]
             if (x["type"] == "3" and x["lname"] == g):
                 return i
     def next (self, op : Union[None, str] = None) -> Union[bool, str, Tuple[str, list]]:
         if (self.pos >= len(self.linedata[self.active])):
             return False
-        dat = self.linedata[self.active][self.pos]
-        t = int(dat["type"])
+        dat : dict = self.linedata[self.active][self.pos]
+        t : int = int(dat["type"])
         if (t == 0):
             self.pos += 1
             return dat["text"]
@@ -348,22 +348,23 @@ class NPC ():
 # manages tasks
 class Task ():
     ## Task
-    def __init__ (self, data : dict):
-        self.text = data["text"]
-        self.instructions = data["instructions"]
-        self.comptext = data["comptext"]
-        self.trigger = data["trigger"]
+    def __init__ (self, data : dict) -> None:
+        self.text : str = data["text"]
+        self.instructions : str = data["instructions"]
+        self.comptext : str = data["comptext"]
+        self.trigger : dict = data["trigger"]
+        self.triggers : List[dict] = []
         if ("triggers" in data):
             self.triggers = data["triggers"]
         else:
             self.triggers = [data["trigger"]]
             self.trigger = {"name":"COMPOUND", "req":"all"}
-        self.rewards = data["rewards"] if "rewards" in data else []
+        self.rewards : List[dict] = data["rewards"] if "rewards" in data else []
     # runs checks to see if the task is complete
     def check (self) -> bool:
-        state = {"all":0,"any":1}[self.trigger["req"]]
+        state : int = {"all":0,"any":1}[self.trigger["req"]]
         for trigger in self.triggers:
-            r = game.check_qt_trigger(trigger)
+            r : bool = game.check_qt_trigger(trigger)
             if (state == 0 and not r):
                 return False
             elif (state == 1 and r):
@@ -377,18 +378,60 @@ class Task ():
 class Quest ():
     ## Quest
     def __init__ (self, qo : dict):
-        self.name = qo["name"]
-        self.comptext = qo["comptext"]
-        self.retreq = qo["return"] == "yes"
-        self.tasks = [Task(qo["tasks"][i]) for i in range(len(qo["tasks"]))]
-        self.rewards = qo["rewards"]
-        self.prog = qo["prog"]
+        self.qid : str = qo["qid"]
+        self.name : str = qo["name"]
+        self.comptext : str = qo["comptext"]
+        self.retreq : bool = qo["return"] == "yes"
+        self.tasks : List[Task] = [Task(qo["tasks"][i]) for i in range(len(qo["tasks"]))]
+        self.rewards : List[dict] = qo["rewards"]
+        self.prog : int = qo["prog"]
+        self.done : bool = False
+        self.rag : bool = False
+    def _next_task (self) -> bool:
+        self.prog += 1
+        if (self.prog >= len(self.tasks)):
+            self.done = True
+            return False
+        return True
+    def event (self, kind : str, specific : str, *data) -> bool:
+        if (self.done):
+            return True
+        if (self.tasks[self.prog].event(kind, specific, data)):
+            return not self._next_task()
+        return False
+    def complete (self) -> None:
+        if (not self.done or self.rag):
+            return
+        self.rag : bool = True
+
+# manages quests
+class QuestManager ():
+    ## QuestManager
+    def __init__ (self) -> None:
+        self.quests : List[Quest] = []
+        self.torem : List[str] = []
+    def remdone (self) -> None:
+        ol = len(self.quests)
+        for i in range(ol):
+            i = ol - i - 1
+            quest : Quest = self.quests[i]
+            if (quest.qid in self.torem):
+                quest.complete()
+                self.quests.pop(i)
+        self.torem.clear()
+    def event (self, kind : str, specific : str, *data) -> None:
+        for quest in self.quests:
+            if (quest.event(kind, specific, *data)):
+                self.torem.append(quest.qid)
+        self.remdone()
 
 # handles top level game logic
 class Runner ():
     ## Runner
     def __init__ (self):
+        # offloading
         self.player = Player()
+        self.questmanager = QuestManager()
         # collections of rooms
         self.area_data = {}
         # a single room
@@ -409,13 +452,29 @@ class Runner ():
         self.inshopin = False
         # events
         self.listeners = {"any":{"null":[]}, "input":{"null":[]}, "output":{"null":[]}, "load":{"null":[],"area":[],"room":[]}, "combat":{"null":[],"start":[],"win":[],"lose":[],"attack":[],"enemy-death":[]}, "quest":{"null":[],"accept":[],"complete":[]}, "reward":{"null":[],"combat":[],"quest":[]}, "dialog":{"null":[],"start":[],"leave":[],"continue":[]}, "shop":{"null":[],"enter":[],"leave":[]}}
+        self.evflags = {}
+        for broad in self.listeners.keys():
+            scope = self.listeners[broad]
+            self.evflags[broad] = False
+            for key in scope.keys():
+                self.evflags[broad+"-"+key] = False
+        self.counts = {
+            "kills" : 0,
+            "b-won" : 0,
+            "c-opened" : 0,
+            "i-looted" : 0,
+        }
     ## events
     def listen (self, listener, kind : str = "any", specific : str = "null") -> None:
         self.listeners[kind][specific].append(listener)
     def _trigger_any (self, kind : str = "any", spec : str = "null") -> None:
+        self.evflags["any"] = True
+        self.evflags["any-null"] = True
         for l in self.listeners["any"]["null"]:
             l((kind, spec))
     def trigger_event (self, kind : str, specific : str, *data) -> None:
+        self.evflags[kind] = True
+        self.evflags[kind+"-"+specific] = True
         self._trigger_any(kind, specific)
         for l in self.listeners[kind][specific]:
             l((kind, specific), *data)
@@ -930,7 +989,8 @@ class Runner ():
     ## history
     def _save_hist_scope (self, clear : bool = True) -> None:
         readline.write_history_file("history.txt")
-        readline.clear_history()
+        if (clear):
+            readline.clear_history()
     def _load_hist_scope (self) -> None:
         readline.read_history_file("history.txt")
     ## main start
@@ -961,9 +1021,9 @@ game = Runner()
 
 ## saveloader
 class SaveLoader ():
-    def __init__ (self):
-        self._sf_name = "save"
-        self._sf_ext = "tssvf"
+    def __init__ (self) -> None:
+        self._sf_name : str = "save"
+        self._sf_ext : str = "tssvf"
         try:
             with open(f"{self._sf_name}.{self._sf_ext}", "x"):
                 pass

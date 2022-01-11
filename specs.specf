@@ -40,7 +40,7 @@ UID INDEX {
 
 ##UID0
 game running {
-    if any args are passed to the script then dev mode will be activated, the number and content of args is unused
+    if "-s" passed to the script then dev mode will be activated
 
     ##UID0-0
     dev mode {
