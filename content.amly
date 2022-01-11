@@ -1,4 +1,5 @@
 ```
+~~ dungeon "test range"
     did = 0
     ac = 1
     name = test range
@@ -23,12 +24,14 @@
     startroom = entry
 ```
 ```
+~~ npc "bob" of dungeon "test range"
     did = 1
     cid = 0
     nid = 0
     name = bob
 ```
 ```
+~~ dialog 1 for npc "bob" of dungeon "test range"
     did = 4
     cid = 0
     *&dialog**
@@ -80,12 +83,13 @@
     **/linedata**
 ```
 ```
+~~ tutorial quest
     did = 2
     qid = 0
     name = tutorial
     *&tasks**
         **0**
-            trigger = <ACTION kind=any specific=null>
+            trigger = <EVENT kind=pl-move specific=walk>
             text = first steps
         **/0**
     **/tasks**
@@ -94,6 +98,7 @@
     **/rewards**
 ```
 ```
+~~ tutorial boss
     did = 3
     eid = tuten
     name = tutorial boss
