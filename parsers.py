@@ -176,7 +176,7 @@ def parse (rawline : str):
             cb[line[0]] = line[1] if line[1][0] != "<" else datstruct(line[1])
         else:
             # print(cb)
-            if (flatlist and blockdepth == 1):
+            if (flatlist):
                 cb.append(datstruct(line))
             else:
                 cb["list"].append(datstruct(line))
