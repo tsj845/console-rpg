@@ -6,7 +6,6 @@ _dev = False
 if len(sys.argv) > 1 and sys.argv[1] == "-pt":
     _dev = True
 
-commentre = re.compile("~~.*\n?")
 assignre = re.compile("[^\n]+ = [^\n]+\n?")
 blockre = re.compile("\*\*[\w\s/-]*\*\*\n?|\*&[\w\s-]*\*\*\n?")
 
@@ -25,10 +24,6 @@ def parse (rawline : str):
         return
     # strips trailing newline
     rawline = rawline[:-1] if rawline[-1] == "\n" else rawline
-    # removes comments
-    matches = commentre.findall(rawline)
-    for m in matches:
-        rawline = rawline.replace(m, "", 1)
     # final data
     data = {}
     # block lines
@@ -38,6 +33,14 @@ def parse (rawline : str):
     # nested block depth
     blockdepth = 0
     rawline = rawline.split("\n")
+    ol = len(rawline)
+    # removes whitespace and comments
+    for i in range(ol):
+        i = ol - i - 1
+        rawline[i] = rawline[i].strip()
+        l = rawline[i]
+        if (l.startswith("~~")):
+            rawline.pop(i)
     for i in range(len(rawline)):
         rawline[i] = rawline[i].lstrip()
         # checks if line has block syntax

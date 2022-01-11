@@ -1,111 +1,111 @@
 ```
-did = 0
-ac = 1
-name = test range
-*&rooms**
-**entry**
-<NPC nid=0>
-<CON target="hall 1">
-**/entry**
-**hall 1**
-<ENEMY type=0 level=0 dabs=0>
-<CHEST level=0>
-<CON target=entry>
-<CON target="hall 2">
-**/hall 1**
-**hall 2**
-<ENEMY eid=tuten>
-<CON target="hall 1">
-**/hall 2**
-**/rooms**
-*&cons**
-**/cons**
-startroom = entry
+    did = 0
+    ac = 1
+    name = test range
+    *&rooms**
+        **entry**
+            <NPC nid=0>
+            <CON target="hall 1">
+        **/entry**
+        **hall 1**
+            <ENEMY type=0 level=0 dabs=0>
+            <CHEST level=0>
+            <CON target=entry>
+            <CON target="hall 2">
+        **/hall 1**
+        **hall 2**
+            <ENEMY eid=tuten>
+            <CON target="hall 1">
+        **/hall 2**
+    **/rooms**
+    *&cons**
+    **/cons**
+    startroom = entry
 ```
 ```
-did = 1
-cid = 0
-nid = 0
-name = bob
+    did = 1
+    cid = 0
+    nid = 0
+    name = bob
 ```
 ```
-did = 4
-cid = 0
-*&dialog**
-**d1**
-trigger = null
-link = d-1
-**/d1**
-**/dialog**
-**linedata**
-*&d-1**
-**0**
-type = 0
-text = hello there!
-**/0**
-**1**
-type = 1
-text = pick one
-opts = <OPTG 0=l0 1=l1>
-**/1**
-**2**
-type = 3
-lname = l0
-**/2**
-**3**
-type = 0
-text = you chose option one
-**/3**
-**4**
-type = 2
-goto = l2
-**/4**
-**5**
-type = 3
-lname = l1
-**/5**
-**6**
-type = 0
-text = you chose option two
-**/6**
-**7**
-type = 3
-lname = l2
-**/7**
-**8**
-type = 0
-text = [END DIALOG]
-**/8**
-**/d-1**
-**/linedata**
+    did = 4
+    cid = 0
+    *&dialog**
+        **d1**
+            trigger = null
+            link = d-1
+        **/d1**
+    **/dialog**
+    **linedata**
+        *&d-1**
+            **0**
+                type = 0
+                text = hello there!
+            **/0**
+            **1**
+                type = 1
+                text = pick one
+                opts = <OPTG 0=l0 1=l1>
+            **/1**
+            **2**
+                type = 3
+                lname = l0
+            **/2**
+            **3**
+                type = 0
+                text = you chose option one
+            **/3**
+            **4**
+                type = 2
+                goto = l2
+            **/4**
+            **5**
+                type = 3
+                lname = l1
+            **/5**
+            **6**
+                type = 0
+                text = you chose option two
+            **/6**
+            **7**
+                type = 3
+                lname = l2
+            **/7**
+            **8**
+                type = 0
+                text = [END DIALOG]
+            **/8**
+        **/d-1**
+    **/linedata**
 ```
 ```
-did = 2
-qid = 0
-name = tutorial
-*&tasks**
-**0**
-trigger = <ACTION kind=any specific=null>
-text = first steps
-**/0**
-**/tasks**
-*&rewards**
-<XP amount=1>
-**/rewards**
+    did = 2
+    qid = 0
+    name = tutorial
+    *&tasks**
+        **0**
+            trigger = <ACTION kind=any specific=null>
+            text = first steps
+        **/0**
+    **/tasks**
+    *&rewards**
+        <XP amount=1>
+    **/rewards**
 ```
 ```
-did = 3
-eid = tuten
-name = tutorial boss
-level = 0
-type = 0
-baseh = 5
-based = 0
-basea = 1
-bases = 2
-basem = 0
-**items**
-weapon = <ITEM level=0 xpr=0 xpm=0 hmod=1 dmod=1 amod=2 smod=0 mmod=0 name="wubba dub dub">
-shield = <ITEM level=0 xpr=0 xpm=0 hmod=0 dmod=2 amod=0 smod=0 mmod=0 name="bubba bub blocked">
-**/items**
+    did = 3
+    eid = tuten
+    name = tutorial boss
+    level = 0
+    type = 0
+    baseh = 5
+    based = 0
+    basea = 1
+    bases = 2
+    basem = 0
+    **items**
+        weapon = <ITEM level=0 xpr=0 xpm=0 hmod=1 dmod=1 amod=2 smod=0 mmod=0 name="wubba dub dub">
+        shield = <ITEM level=0 xpr=0 xpm=0 hmod=0 dmod=2 amod=0 smod=0 mmod=0 name="bubba bub blocked">
+    **/items**
 ```
