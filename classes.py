@@ -1,6 +1,7 @@
 _dev = True
 
 import sys
+from typing import Tuple, Union, Any
 
 if (len(sys.argv) > 1):
     _dev = True
@@ -74,9 +75,9 @@ class Item ():
             self._levelup()
     def calc_stat (self, stat : str) -> None:
         return self.stats[stat]
-    def __str__ (self):
+    def __str__ (self) -> str:
         return f"<{bodyslotnames[self.type].upper()} \"{self.name}\" h={self.stats['h']} a={self.stats['a']} d={self.stats['d']} s={self.stats['s']} m={self.stats['m']}>"
-    def __repr__ (self):
+    def __repr__ (self) -> str:
         return self.__str__()
 
 # handles complex item tasks
@@ -87,7 +88,7 @@ class ItemManager ():
         self.slotnames = bodyslotnames
         self.mins = itemmins
         self.maxs = itemmaxs
-    def _target (self, value, index : int, iterable : list) -> list:
+    def _target (self, value : Any, index : int, iterable : list) -> list:
         final = []
         for item in iterable:
             if (item[index] == value):
@@ -103,13 +104,11 @@ class ItemManager ():
         return {"h":randrange(mins["h"],maxs["h"]+1),"a":randrange(mins["a"],maxs["a"]+1),"m":randrange(mins["m"],maxs["m"]+1),"s":randrange(mins["s"],maxs["s"]+1),"d":randrange(mins["d"],maxs["d"]+1)}
     def get_rand_itemset (self, level : int, typeid : int) -> tuple:
         names, ind = self.gri__get_names(typeid, level)
-        # print(ind, "itemind")
         classi = names[:2]
         names = names[2:]
         return classi[0], [Item(self.slotnames[i], names[i], self.gri__gen_stats(typeid, level, i, ind), reqxp=1, levelmod=1) if names[i] != None else None for i in range(7)]
-    def genitem (self, level : int = 0):
+    def genitem (self, level : int = 0) -> Item:
         slot = randrange(0, len(bodyslotnames))
-        # print(len(pitemmins[level]), slot)
         mins = pitemmins[level][slot]
         maxs = pitemmaxs[level][slot]
         stats = {"h":randrange(mins["h"],maxs["h"]+1),"a":randrange(mins["a"],maxs["a"]+1),"m":randrange(mins["m"],maxs["m"]+1),"s":randrange(mins["s"],maxs["s"]+1),"d":randrange(mins["d"],maxs["d"]+1)}
@@ -121,7 +120,7 @@ ItemManager = ItemManager()
 # enemy inventory, seperate because the inventory consists only of equipped items and is not normally modified
 class EnemyInventory ():
     ## EnemyInventory
-    def __init__ (self, level : int, typeid : int, preset=None):
+    def __init__ (self, level : int, typeid : int, preset : Union[None, dict] = None):
         self.level = level
         self.classi = typeid
         self.name = "unset"
@@ -154,7 +153,7 @@ class EnemyInventory ():
 # stores data about an enemy
 class Enemy ():
     ## Enemy
-    def __init__ (self, typeid : int, level : int, preset=None):
+    def __init__ (self, typeid : int, level : int, preset : Union[None, dict] = None):
         self.typeid = typeid
         self.level = level
         mins = enemymins[level][typeid]
@@ -210,7 +209,7 @@ class PlayerInventory ():
             return False
         self.slots.append(item)
         return True
-    def remove (self, index : int):
+    def remove (self, index : int) -> Union[Item, bool]:
         try:
             return self.slots.pop(index)
         except:
@@ -320,15 +319,12 @@ class NPC ():
         for i in range(self.pos+1, len(self.linedata[self.active])):
             x = self.linedata[self.active][i]
             if (x["type"] == "3" and x["lname"] == g):
-                # print(self.linedata[self.active][i:])
                 return i
-    def next (self, op = None):
+    def next (self, op : Union[None, str] = None) -> Union[bool, str, Tuple[str, list]]:
         if (self.pos >= len(self.linedata[self.active])):
             return False
-        # print(self.pos, "POSDB")
         dat = self.linedata[self.active][self.pos]
         t = int(dat["type"])
-        # print(t)
         if (t == 0):
             self.pos += 1
             return dat["text"]
@@ -336,7 +332,6 @@ class NPC ():
             if (op != None):
                 if (op in dat["opts"].keys() and dat != "name"):
                     self.pos = self._goto(dat["opts"][op])
-                    # print(self.pos)
                     return self.next()
             else:
                 return dat["text"], list(dat["opts"].keys())[1:]
@@ -347,6 +342,11 @@ class NPC ():
             self.pos += 1
             return self.next()
 
+# handles quest stuff
+class Quest ():
+    ## Quest
+    def __init__ (self, qo : dict):
+        pass
 
 # handles top level game logic
 class Runner ():
@@ -395,7 +395,7 @@ class Runner ():
                 ents.append(ent)
         return ents
     ## combat
-    def _form_endat (self, data : dict):
+    def _form_endat (self, data : dict) -> Union[Tuple[int, int], Tuple[int, int, dict]]:
         def geten (eid : str) -> dict:
             for i in range(len(self.full_data["enemies"])):
                 en = self.full_data["enemies"][i]
@@ -678,7 +678,6 @@ class Runner ():
         npc = grabnpc(npcs[text])
         dia = {}
         for di in self.full_data["dialogs"]:
-            # print(npc)
             if (di["cid"] == npc["cid"]):
                 dia = di
                 break
@@ -711,7 +710,6 @@ class Runner ():
                 _game_print(f"{r[0]}: {', '.join(r[1])}")
         else:
             _game_print(self.active_npc.next(text))
-            # _game_print("work in progress")
     def _forcegenitem (self, text : str) -> None:
         text = text.split(" ")
         slotid = int(text[0])
