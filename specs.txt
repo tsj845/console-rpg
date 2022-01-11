@@ -15,6 +15,9 @@ game running {
 
 content.amly {
     - stores all game content
+    notes {
+        leading and trailing whitespace is always removed before any line processing, so feel free to use indentation to help organize
+    }
     syntax {
         amly document def {
             ```
