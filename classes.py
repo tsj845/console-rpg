@@ -438,6 +438,7 @@ class QuestManager ():
     def __init__ (self) -> None:
         self.quests : List[Quest] = []
         self.torem : List[str] = []
+        self.completed : List[Quest] = []
     def remdone (self) -> None:
         ol = len(self.quests)
         for i in range(ol):
@@ -445,7 +446,7 @@ class QuestManager ():
             quest : Quest = self.quests[i]
             if (quest.qid in self.torem):
                 quest.complete()
-                self.quests.pop(i)
+                self.completed.append(self.quests.pop(i))
         self.torem.clear()
     def event (self, kind : str, specific : str, *data) -> None:
         for quest in self.quests:
@@ -922,8 +923,11 @@ class Runner ():
         elif (text.startswith("list")):
             if (len(text) > 4):
                 if (text == "list complete"):
-                    ### WORK IN PROGRESS
-                    _game_print("work in progress")
+                    if (len(self.questmanager.quests) == 0):
+                        _game_print("you have no completed quests")
+                        return
+                    for q in self.questmanager.quests:
+                        _game_print(f"<QUEST progress={q.prog} name={q.name}>")
                 return
             if (len(self.questmanager.quests) == 0):
                 _game_print("you have no active quests")
