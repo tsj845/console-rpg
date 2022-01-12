@@ -356,6 +356,7 @@ class NPC ():
 
 # manages tasks
 class Task ():
+    ### NEEDS FIXING
     ## Task
     def __init__ (self, data : dict) -> None:
         self.text : str = data["text"]
@@ -390,6 +391,9 @@ class Task ():
             return False
     def event (self, kind : str, specific : str, *data) -> bool:
         return self.check()
+    def complete (self) -> None:
+        for r in self.rewards:
+            game.reward(r)
 
 # handles quest stuff
 class Quest ():
@@ -405,6 +409,7 @@ class Quest ():
         self.done : bool = False
         self.rag : bool = False
     def _next_task (self) -> bool:
+        self.tasks[self.prog].complete()
         self.prog += 1
         if (self.prog >= len(self.tasks)):
             self.done = True
@@ -419,7 +424,9 @@ class Quest ():
     def complete (self) -> None:
         if (not self.done or self.rag):
             return
-        self.rag : bool = True
+        self.rag = True
+        for r in self.rewards:
+            game.reward(r)
 
 # manages quests
 class QuestManager ():
@@ -484,6 +491,18 @@ class Runner ():
             "i-looted" : 0,
         }
         self.listen(self.questmanager.event)
+    ## reward
+    def reward (self, reward : dict) -> None:
+        n = reward["name"]
+        if (n == "XP"):
+            self.player.receive_xp(int(reward["amount"]))
+        elif (n == "ITEM"):
+            self._forcegenitem(" ".join([reward["slot"], reward["iname"], reward["h"], reward["a"], reward["d"], reward["s"], reward["m"], reward["lvl"], reward["xp"], reward["xpr"], reward["xpm"]]))
+        elif (n == "UPG"):
+            t = reward["target"]
+            if (t == "inv-slots"):
+                self.player.inventory.maxslots += int(reward["amount"])
+    ## quests
     def get_quest (self, qid : str) -> dict:
         quests = self.full_data["quests"]
         for q in quests:
