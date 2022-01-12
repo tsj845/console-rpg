@@ -501,13 +501,17 @@ class Runner ():
     def reward (self, reward : dict) -> None:
         n = reward["name"]
         if (n == "XP"):
-            self.player.receive_xp(int(reward["amount"]))
+            a = int(reward["amount"])
+            _game_print(f"you got {a} xp")
+            self.player.receive_xp(a)
         elif (n == "ITEM"):
             self._forcegenitem(" ".join([reward["slot"], reward["iname"], reward["h"], reward["a"], reward["d"], reward["s"], reward["m"], reward["lvl"], reward["xp"], reward["xpr"], reward["xpm"]]))
         elif (n == "UPG"):
             t = reward["target"]
             if (t == "inv-slots"):
-                self.player.inventory.maxslots += int(reward["amount"])
+                a = int(reward["amount"])
+                self.player.inventory.maxslots += a
+                _game_print(f"you inventory capacity was increased by {a}, raising total capacity to {self.player.inventory.maxslots}")
     ## quests
     def get_quest (self, qid : str) -> dict:
         quests = self.full_data["quests"]
@@ -882,6 +886,7 @@ class Runner ():
         self.trigger_event("dialog", "continue")
         if (self.active_npc.done()):
             self._parse_dialog("leave")
+    ## FGI
     def _forcegenitem (self, text : str) -> None:
         text = text.split(" ")
         slotid = int(text[0])
@@ -895,7 +900,9 @@ class Runner ():
         xp = int(text[8]) if len(text) > 8 else 0
         xpr = int(text[9]) if len(text) > 9 else 0
         xpm = float(text[10]) if len(text) > 10 else 0
-        self.player.inventory.slots.append(Item(slotid, name, {"h":h,"a":a,"d":d,"s":s,"m":m}, level, xp, xpr, xpm))
+        i = Item(slotid, name, {"h":h,"a":a,"d":d,"s":s,"m":m}, level, xp, xpr, xpm)
+        self.player.inventory.slots.append(i)
+        _game_print(f"you recieved:\n\t{i}")
     def _lootroom (self, text : str) -> None:
         if (len(self.player.inventory.slots) >= self.player.inventory.maxslots):
             _game_print("you don't have room in your inventory")
