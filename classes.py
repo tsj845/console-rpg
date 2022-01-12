@@ -1,9 +1,14 @@
 _dev = True
 
-from re import T
 import sys
 import readline
 from typing import Dict, List, Tuple, Union, Any
+
+try:
+    with open("history.txt", "x"):
+        pass
+except FileExistsError:
+    pass
 
 if ("-s" in sys.argv):
     _dev = True
