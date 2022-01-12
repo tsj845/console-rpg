@@ -370,6 +370,8 @@ class Task ():
             self.triggers = [data["trigger"]]
             self.trigger = {"name":"COMPOUND", "req":"all"}
         self.rewards : List[dict] = data["rewards"] if "rewards" in data else []
+    # activates the task
+    def activate (self) -> None:
         for t in self.triggers:
             if (t["name"] == "COUNT"):
                 if ("o" in t):
@@ -406,6 +408,7 @@ class Quest ():
         self.tasks : List[Task] = [Task(qo["tasks"][i]) for i in range(len(qo["tasks"]))]
         self.rewards : List[dict] = qo["rewards"]
         self.prog : int = qo["prog"]
+        self.tasks[self.prog].activate()
         self.done : bool = False
         self.rag : bool = False
     def _next_task (self) -> bool:
@@ -414,6 +417,7 @@ class Quest ():
         if (self.prog >= len(self.tasks)):
             self.done = True
             return False
+        self.tasks[self.prog].activate()
         return True
     def event (self, kind : str, specific : str, *data) -> bool:
         if (self.done):
@@ -941,7 +945,6 @@ class Runner ():
     ## input
     def parse_input (self, text : str) -> None:
         if (_dev):
-            self.incombat = True
             try:
                 if (text.startswith("sps")):
                     text = text.split(" ")
