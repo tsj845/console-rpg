@@ -76,9 +76,13 @@
                 lname = l2
             **/7**
             **8**
+                type = 4
+                qid = 0
+            **/8**
+            **9**
                 type = 0
                 text = [END DIALOG]
-            **/8**
+            **/9**
         **/d-1**
     **/linedata**
 ```
@@ -143,7 +147,7 @@
             ~~ multiple conditions trigger
             *&triggers**
                 <COUNT a=kills c=2>
-                <COUNT a=bwon c=2>
+                <COUNT a=b-won c=2>
             **/triggers**
             text = win
             instructions = this quest has two parts: kill two enemies and win two fights
@@ -151,7 +155,7 @@
         **/0**
         **1**
             ~~ sets an offset, meaning that the player must complete two more fights that they currently have completed
-            trigger = <COUNT a=bwon o=2>
+            trigger = <COUNT a=b-won o=2>
             text = time for a challenge
             instructions = win two more fights
             comptext = all done

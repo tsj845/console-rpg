@@ -1,5 +1,6 @@
 _dev = True
 
+from re import T
 import sys
 import readline
 from typing import Dict, List, Tuple, Union, Any
@@ -342,6 +343,9 @@ class NPC ():
         elif (t == 3):
             self.pos += 1
             return self.next()
+        elif (t == 4):
+            self.pos += 1
+            return {"id":dat["qid"]}
     def done (self) -> bool:
         return self.pos >= len(self.linedata[self.active])
 
@@ -360,6 +364,12 @@ class Task ():
             self.triggers = [data["trigger"]]
             self.trigger = {"name":"COMPOUND", "req":"all"}
         self.rewards : List[dict] = data["rewards"] if "rewards" in data else []
+        for t in self.triggers:
+            if (t["name"] == "COUNT"):
+                if ("o" in t):
+                    t["c"] = game.counts[t["a"]] + int(t["o"])
+                else:
+                    t["c"] = int(t["c"])
     # runs checks to see if the task is complete
     def check (self) -> bool:
         state : int = {"all":0,"any":1}[self.trigger["req"]]
@@ -373,6 +383,8 @@ class Task ():
             return True
         elif (state == 1):
             return False
+    def event (self, kind : str, specific : str, *data) -> bool:
+        return self.check()
 
 # handles quest stuff
 class Quest ():
@@ -424,6 +436,8 @@ class QuestManager ():
             if (quest.event(kind, specific, *data)):
                 self.torem.append(quest.qid)
         self.remdone()
+    def add_quest (self, quest : Quest) -> None:
+        self.quests.append(quest)
 
 # handles top level game logic
 class Runner ():
@@ -438,7 +452,6 @@ class Runner ():
         self.room_data = {}
         # all the data in the game
         self.full_data = {"dungeons":[], "npcs":[], "quests":[], "enemies":[], "dialogs":[], "misc":[]}
-        self.active_quests = []
         # active enemies/entities
         self.enemies = []
         self.entities = []
@@ -450,8 +463,9 @@ class Runner ():
         self.indialog = False
         self.ininvent = False
         self.inshopin = False
+        self.inquestm = False
         # events
-        self.listeners = {"any":{"null":[]}, "input":{"null":[]}, "output":{"null":[]}, "load":{"null":[],"area":[],"room":[]}, "combat":{"null":[],"start":[],"win":[],"lose":[],"attack":[],"enemy-death":[]}, "quest":{"null":[],"accept":[],"complete":[]}, "reward":{"null":[],"combat":[],"quest":[]}, "dialog":{"null":[],"start":[],"leave":[],"continue":[]}, "shop":{"null":[],"enter":[],"leave":[]}}
+        self.listeners = {"any":{"null":[]}, "input":{"null":[]}, "output":{"null":[]}, "load":{"null":[],"area":[],"room":[]}, "combat":{"null":[],"start":[],"win":[],"lose":[],"attack":[],"enemy-death":[]}, "quest":{"null":[],"accept":[],"complete":[]}, "reward":{"null":[],"combat":[],"quest":[]}, "dialog":{"null":[],"start":[],"leave":[],"continue":[]}, "shop":{"null":[],"enter":[],"leave":[]}, "inven":{"null":[], "equip":[]}, "loot":{"null":[], "chest":[]}, "pl-move":{"null":[], "walk":[]}}
         self.evflags = {}
         for broad in self.listeners.keys():
             scope = self.listeners[broad]
@@ -464,20 +478,26 @@ class Runner ():
             "c-opened" : 0,
             "i-looted" : 0,
         }
+        self.listen(self.questmanager.event)
+    def get_quest (self, qid : str) -> dict:
+        quests = self.full_data["quests"]
+        for q in quests:
+            if (q["qid"] == qid):
+                return q
     ## events
     def listen (self, listener, kind : str = "any", specific : str = "null") -> None:
         self.listeners[kind][specific].append(listener)
-    def _trigger_any (self, kind : str = "any", spec : str = "null") -> None:
+    def _trigger_any (self, kind : str = "any", spec : str = "null", *data) -> None:
         self.evflags["any"] = True
         self.evflags["any-null"] = True
         for l in self.listeners["any"]["null"]:
-            l((kind, spec))
+            l(kind, spec, *data)
     def trigger_event (self, kind : str, specific : str, *data) -> None:
         self.evflags[kind] = True
         self.evflags[kind+"-"+specific] = True
-        self._trigger_any(kind, specific)
+        self._trigger_any(kind, specific, *data)
         for l in self.listeners[kind][specific]:
-            l((kind, specific), *data)
+            l(kind, specific, *data)
     def _room_has (self, typename : str) -> bool:
         for ent in self.room_data["list"]:
             if (ent["name"] == typename):
@@ -497,7 +517,11 @@ class Runner ():
             elif (trig["con"] == "never"):
                 return False
         return False
-    def check_qt_trig (self, trig : dict):
+    def check_qt_trigger (self, trig : dict):
+        if (trig["name"] == "EVENT"):
+            return self.evflags[trig["kind"]+"-"+trig["specific"]]
+        elif (trig["name"] == "COUNT"):
+            return self.counts[trig["a"]] >= trig["c"]
         return False
     ## combat
     def _form_endat (self, data : dict) -> Union[Tuple[int, int], Tuple[int, int, dict]]:
@@ -582,8 +606,10 @@ class Runner ():
             lst = self.room_data["list"]
             for i in range(len(lst)):
                 ent = lst[i]
-                if (ent["unid"] == ind):
+                if (ent["name"] == "ENEMY" and ent["unid"] == ind):
                     lst.pop(i)
+                    self.trigger_event("combat", "enemy-death")
+                    self.counts["kills"] += 1
                     break
             self._upenunid()
             if (len(self.enemies) == 0):
@@ -711,6 +737,7 @@ class Runner ():
             _game_print(f"walking to {text}...")
             sleep(0.25)
             self.load_room(self._grabroom(text))
+            self.trigger_event("pl-move", "walk")
     ## combat input
     def _parse_combin (self, text : str) -> None:
         if (text == "list"):
@@ -752,6 +779,7 @@ class Runner ():
                 return
             if (self.player.inventory.equip(text[1], ind)):
                 _game_print("item equipped")
+                self.trigger_event("inven", "equip", self.player.inventory.body[text[1]])
             else:
                 _game_print("failed to equip item")
         elif (text.startswith("drop")):
@@ -792,6 +820,7 @@ class Runner ():
         flavor = ("you strike a conversation with", "you start talking to", "you initiate data transfer protocols with")
         _game_print(f"{choice(flavor)} {self.active_npc.name}")
         self._parse_dialog("", True)
+        self.trigger_event("dialog", "start")
     ## dialog input
     def _parse_dialog (self, text : str, k : bool = False) -> None:
         if (text == "leave"):
@@ -800,6 +829,7 @@ class Runner ():
             _game_print("leaving dialog...")
             sleep(0.25)
             self._load_hist_scope()
+            self.trigger_event("dialog", "leave")
             return
         if (text == ""):
             if (not k):
@@ -810,10 +840,16 @@ class Runner ():
                 return
             if (type(r) == str):
                 _game_print(r)
+            elif (type(r) == dict):
+                q = Quest(self.get_quest(r["id"]))
+                self.questmanager.add_quest(q)
+                _game_print(f"\x1b[2K{self.active_npc.name} has given you the quest {q.name}")
+                self.trigger_event("quest", "accept", q)
             else:
                 _game_print(f"{r[0]}: {', '.join(r[1])}")
         else:
             _game_print(self.active_npc.next(text))
+        self.trigger_event("dialog", "continue")
         if (self.active_npc.done()):
             self._parse_dialog("leave")
     def _forcegenitem (self, text : str) -> None:
@@ -834,7 +870,10 @@ class Runner ():
         if (len(self.player.inventory.slots) >= self.player.inventory.maxslots):
             _game_print("you don't have room in your inventory")
             return
-        text = int(text)
+        if (not text.isdigit()):
+            _game_print("invalid uid")
+            return
+        text = int(text) - 1
         for i in range(len(self.room_data["list"])):
             ent = self.room_data["list"][i]
             if (ent["name"] == "CHEST" and ent["unid"] == text):
@@ -844,6 +883,37 @@ class Runner ():
                 self.player.inventory.add(item)
                 _game_print(f"you got: lvl {int(ent['level'])} {item.name}")
                 break
+        self.trigger_event("loot", "chest")
+    ## quest input
+    def _parse_quest (self, text : str) -> None:
+        if (text == "back"):
+            _game_print("leaving quest manager...")
+            sleep(0.25)
+            self.inquestm = False
+            return
+        elif (text.startswith("list")):
+            if (len(text) > 4):
+                if (text == "list complete"):
+                    ### WORK IN PROGRESS
+                    _game_print("work in progress")
+                return
+            if (len(self.questmanager.quests) == 0):
+                _game_print("you have no active quests")
+                return
+            for q in self.questmanager.quests:
+                _game_print(f"<QUEST progress={q.prog} name={q.name}>")
+        elif (text.startswith("task")):
+            text = text[5:]
+            if (not text.isdigit()):
+                _game_print("invalid uid")
+                return
+            text = int(text)-1
+            if (text < 0 or text >= len(self.questmanager.quests)):
+                _game_print("nonexistant uid")
+                return
+            q = self.questmanager.quests[text]
+            t : Task = q.tasks[q.prog]
+            _game_print(f"current task:\n\tname: {t.text}\n\tinstuctions: {t.instructions}")
     ## input
     def parse_input (self, text : str) -> None:
         if (_dev):
@@ -868,6 +938,10 @@ class Runner ():
         # do dialog stuff
         if (self.indialog):
             self._parse_dialog(text)
+            return
+        # do quest stuff
+        if (self.inquestm):
+            self._parse_quest(text)
             return
         # map of area
         if (text == "map"):
@@ -894,6 +968,12 @@ class Runner ():
             _game_print("entering inventory")
             sleep(0.25)
             _game_print("", end="")
+        # manage quests
+        elif (text == "quests"):
+            self.inquestm = True
+            _game_print("entering quest manager...")
+            sleep(0.25)
+            _game_print("", end="")
         # loot the room
         elif (text.startswith("loot")):
             if (not self.incombat):
@@ -913,45 +993,6 @@ class Runner ():
         if (self.incombat):
             self._parse_combin(text)
         self.trigger_event("input", "null", text)
-    ## quests
-    def _parse_qes (self, quest : dict) -> tuple:
-        focus = quest["tasks"]["0"]["trigger"]
-        return focus["kind"], focus["specific"]
-    def _reward (self, rewards : dict) -> None:
-        for r in rewards["list"]:
-            if (r["name"] == "XP"):
-                self.player.receive_xp(int(r["amount"]))
-            elif (r["name"] == "ITEM"):
-                pass
-        self.trigger_event("reward", "quest", rewards)
-    def _compquest (self, qid : str) -> None:
-        quest = None
-        for i in range(len(self.active_quests)):
-            if (self.active_quests[i]["qid"] == qid):
-                quest
-                quest = self.active_quests[i]
-                break
-        self.trigger_event("quest", "complete", quest)
-        self._reward(quest["rewards"])
-    def _progquest (self, qid : str) -> None:
-        quest = None
-        for i in range(len(self.active_quests)):
-            if (self.active_quests[i]["qid"] == qid):
-                quest
-                quest = self.active_quests[i]
-                break
-        quest["prog"] = quest["prog"] + 1
-        if (quest["prog"] == len(quest["tasks"].keys())-1):
-            self._compquest(qid)
-        else:
-            self.trigger_event("quest", "progress", quest)
-    def _questing (self, quest : dict):
-        def f (*a):
-            self._progquest(quest["qid"])
-        return f
-    def activate_quest (self, quest : dict) -> None:
-        self.active_quests.append(quest)
-        self.listen(self._questing(quest), *self._parse_qes(quest))
     ## game lost
     def lostgame (self) -> None:
         _game_print("game over")
