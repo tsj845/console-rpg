@@ -4,6 +4,11 @@ UID INDEX {
     game running - ##UID0
     game running -> dev mod - ##UID0-0
     game running -> dev mode -> dev commands - ##UID01-0
+    game running -> basic commands - ##UID01-1
+    game running -> inventory commands - ##UID01-2
+    game running -> quest commands - ##UID01-3
+    game running -> dialog commands - ##UID01-4
+    game running -> combat commands - ##UID01-5
     content.amly - ##UID1
     content.amly -> notes - ##UID1-0
     content.amly -> syntax - ##UID1-1
@@ -55,6 +60,47 @@ game running {
             ses - sets enemy stat value, "ses [eid] [statid] [value]"
             genitem - generates an item in the player's inventory regardless of slot capacity, "genitem [slotid] [name (replace spaces with '-')] [health] [attack] [defense] [stamina] [mana] (further arguments are optional and all default to zero) [level] [xp] [xpr] [xpm]"
             inspect - opens the inspector, uses eval so for variable assignment do exec("[statement]"), type "exit" to return to main game, has scope within the Runner so "self" returns the game object
+        }
+
+        ##UID01-1
+        basic commands {
+            inven - opens the inventory
+            quests - opens the quest manager
+            walk [destination] - walks to [destination] where [destination] is a room name as listed by the "list doors" command
+            talk [uid] - talks to npc [uid] where [uid] is the 1-based index of the npc as it appears in the "list npcs" command
+            rest - has the player rest to regain stamina
+            loot [uid] - loots chest [uid] where [uid] is the 1-based index of the chest as displayed in the "list chests" command, this will fail if the player has no available inventory slots
+            peek [destination] - lists the [destination] room where [destination] is the same as the "walk" command
+            status - displays the player's status
+        }
+
+        ##UID01-2
+        inventory commands {
+            back - leaves the inventory
+            fill status - displays the number of currently used to available slots
+            drop [uid] - drops item [uid] where [uid] is the 1-based index of the item as displayed using the "list items" command
+            equip [slot name] [uid] - equips item [uid] to slot [slot name] where [uid] is the same as the "drop" command and [slot name] is the full name of the slot
+            list [target] - where [target] is one of ("inven" or "items") to list inventory and "body" to list body slots
+        }
+
+        ##UID01-3
+        quest commands {
+            back - leaves quest manager
+            list - lists active quests
+            task [uid] - displays info about the current task for quest [uid] where [uid] is the 1-based index of the quest as displayed using the "list" command
+        }
+
+        ##UID01-4
+        dialog commands {
+            leave - leaves dialog early
+            [any] - displays the next dialog line unless there is an active option in which case [any] will be checked against responses for the option, if it matches then that response will be used to change what the dialog does
+        }
+
+        ##UID01-5 {
+            list - lists all active enemies
+            attack [uid] - attacks enemy [uid] where [uid] is the 1-based index of the enemy as displayed using the "list" command
+            rest - player rests as normal then enemy attacks
+            -- all basic commands without name collisions and that don't open ui's are still available in combat eg: "status"
         }
     }
 }
