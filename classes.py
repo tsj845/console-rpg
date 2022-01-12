@@ -25,7 +25,8 @@ def _game_print (*args, sep : str= " ", end : str = "\n", flush : bool = False) 
     print(*args, sep=sep, end=end, flush=flush)
 
 def _run_teach () -> None:
-    _game_print("base commands:\n\tquit\n\tinven\n\twalk [destination]\n\tlist [options?]\n\tpeek [target]\ncombat commands:\n\tlist\n\tstatus\n\tattack [target]\n\trest\ninventory commands:\n\tback\n\tlist [target]")
+    with open("helpmenu.txt") as file:
+        _game_print(file.read())
 
 # stores level up reward data
 class LevelRewards ():
