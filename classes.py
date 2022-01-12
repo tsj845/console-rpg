@@ -941,6 +941,7 @@ class Runner ():
     ## input
     def parse_input (self, text : str) -> None:
         if (_dev):
+            self.incombat = True
             try:
                 if (text.startswith("sps")):
                     text = text.split(" ")
@@ -1008,12 +1009,23 @@ class Runner ():
                 self._peek(text)
         # check player status
         elif (text == "status"):
-            _game_print(f"h={self.player.health}/{self.player.maxh} a={self.player.calc_stat('a')} d={self.player.calc_stat('d')} s={self.player.calc_stat('s')} m={self.player.calc_stat('m')}")
+            current_health = "\u2665"*self.player.health
+            total_health = "\u2661"* (self.player.maxh - self.player.health)
+            health_color = "\x1b[0m"
+            percentage = self.player.health / self.player.maxh
+            if percentage <= 1.0 and percentage > .75:
+                health_color = "\x1b[32m"
+            elif percentage <= .75 and percentage > .25:
+                health_color = "\x1b[33m"
+            elif percentage <= .25:
+                health_color = "\x1b[31m"
+            _game_print(f"{health_color}health: {current_health}{total_health}\x1b[0m\nattack: {self.player.calc_stat('a')}\ndefense: {self.player.calc_stat('d')}\nstamina: {self.player.calc_stat('s')}\nmana: {self.player.calc_stat('m')}")
         # regain strength
         elif (text == "rest"):
             self.player.stamina = self.player.maxs
             self.player.mana += ceil((self.player.maxm - self.player.mana) / 2)
             _game_print("you reset to regain your strength")
+            _game_print("")
         if (self.incombat):
             self._parse_combin(text)
         self.trigger_event("input", "null", text)
