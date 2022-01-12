@@ -206,11 +206,12 @@ content.amly {
     }
     ##UID1-4
     npc line specs {
-        type - [line type (0, 1, 2, 3)]
+        type - [line type (0, 1, 2, 3, 4)]
         text - [display text] (for [type=(0, 1)])
         opts - [OPTGROUP] (for [type=(1)]) see "optgroups" UID1-5
         goto - [lname] (for [type=(2)])
         lname - [uid] (for [type=(3)])
+        qid - [qid] (for [type=(4)])
     }
     ##UID1-5
     optgroups {
