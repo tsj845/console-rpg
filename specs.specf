@@ -54,6 +54,7 @@ game running {
             sps - sets player stat value, "sps [statid] [value]"
             ses - sets enemy stat value, "ses [eid] [statid] [value]"
             genitem - generates an item in the player's inventory regardless of slot capacity, "genitem [slotid] [name (replace spaces with '-')] [health] [attack] [defense] [stamina] [mana] (further arguments are optional and all default to zero) [level] [xp] [xpr] [xpm]"
+            inspect - opens the inspector, uses eval so for variable assignment do exec("[statement]"), type "exit" to return to main game, has scope within the Runner so "self" returns the game object
         }
     }
 }
