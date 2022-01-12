@@ -1017,18 +1017,17 @@ class Runner ():
             health_color = "\x1b[0m"
             percentage = self.player.health / self.player.maxh
             if percentage <= 1.0 and percentage > .75:
-                health_color = "\x1b[32m"
+                health_color = "\x1b[38;2;0;200;0m"
             elif percentage <= .75 and percentage > .25:
-                health_color = "\x1b[33m"
+                health_color = "\x1b[38;2;245;245;0m"
             elif percentage <= .25:
-                health_color = "\x1b[31m"
-            _game_print(f"{health_color}health: {current_health}{total_health}\x1b[0m\nattack: {self.player.calc_stat('a')}\ndefense: {self.player.calc_stat('d')}\nstamina: {self.player.calc_stat('s')}\nmana: {self.player.calc_stat('m')}")
+                health_color = "\x1b[38;2;245;0;0m"
+            _game_print(f"health: {health_color}{current_health}{total_health}\x1b[0m\nattack: {self.player.calc_stat('a')}\ndefense: {self.player.calc_stat('d')}\nstamina: {self.player.calc_stat('s')}\nmana: {self.player.calc_stat('m')}")
         # regain strength
         elif (text == "rest"):
             self.player.stamina = self.player.maxs
             self.player.mana += ceil((self.player.maxm - self.player.mana) / 2)
-            _game_print("you reset to regain your strength")
-            _game_print("")
+            _game_print("you rest to regain your strength")
         if (self.incombat):
             self._parse_combin(text)
         self.trigger_event("input", "null", text)
