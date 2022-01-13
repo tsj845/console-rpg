@@ -32,8 +32,6 @@ def _run_teach () -> None:
 
 # stores ansi codes for repeated use
 class ANSI ():
-    ## ANSI
-    # def __init__ (self) -> None:
     # ANSI COLORS
     health_high = "\x1b[38;2;0;200;0m"
     health_medium = "\x1b[38;2;245;245;0m"
@@ -49,6 +47,8 @@ class ANSI ():
     default_text = "\x1b[39m"
     italic = "\x1b[3m"
     unitalic = "\x1b[23m"
+    bold = "\x1b[1m"
+    unbold = "\x1b[22m"
     reset = "\x1b[0m"
     empty_heart = "\u2661"
     heart = "\u2665"
