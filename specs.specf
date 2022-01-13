@@ -88,6 +88,7 @@ game running {
             back - leaves quest manager
             list - lists active quests
             task [uid] - displays info about the current task for quest [uid] where [uid] is the 1-based index of the quest as displayed using the "list" command
+            update - updates all quests allowing the user to trigger checks
         }
 
         ##UID01-4

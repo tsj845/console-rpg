@@ -20,13 +20,40 @@ from random import choice, randrange
 from numpy import ceil, floor
 from time import sleep
 
+globalindent = 0
+
 def _game_print (*args, sep : str= " ", end : str = "\n", flush : bool = False) -> None:
-    print("\x1b[2K", end="")
+    print("\x1b[2K" + ("    " * globalindent), end="")
     print(*args, sep=sep, end=end, flush=flush)
 
 def _run_teach () -> None:
     with open("helpmenu.txt") as file:
         _game_print(file.read())
+
+# stores ansi codes for repeated use
+class ANSI ():
+    ## ANSI
+    # def __init__ (self) -> None:
+    # ANSI COLORS
+    health_high = "\x1b[38;2;0;200;0m"
+    health_medium = "\x1b[38;2;245;245;0m"
+    health_low = "\x1b[38;2;245;0;0m"
+    red = "\x1b[38;2;245;0;0m"
+    orange = "\x1b[38;2;240;150;0m"
+    yellow = "\x1b[38;2;245;245;0m"
+    light_green = "\x1b[38;2;0;200;0m"
+    dark_green = "\x1b[38;2;0;175;0m"
+    light_blue = "\x1b[38;2;0;175;255;0m"
+    dark_blue = "\x1b[38;2;50;255;0m"
+    violet = "\x1b[38;2;200;100;200m"
+    default_text = "\x1b[39m"
+    italic = "\x1b[3m"
+    unitalic = "\x1b[23m"
+    reset = "\x1b[0m"
+    empty_heart = "\u2661"
+    heart = "\u2665"
+
+# ANSI = ANSI()
 
 # stores level up reward data
 class LevelRewards ():
@@ -357,7 +384,6 @@ class NPC ():
 
 # manages tasks
 class Task ():
-    ### NEEDS FIXING
     ## Task
     def __init__ (self, data : dict) -> None:
         self.text : str = data["text"]
@@ -395,8 +421,7 @@ class Task ():
     def event (self, kind : str, specific : str, *data) -> bool:
         return self.check()
     def complete (self) -> None:
-        for r in self.rewards:
-            game.reward(r)
+        game.queue("task", (self.text, self.rewards, self.comptext))
 
 # handles quest stuff
 class Quest ():
@@ -430,8 +455,7 @@ class Quest ():
         if (not self.done or self.rag):
             return
         self.rag = True
-        for r in self.rewards:
-            game.reward(r)
+        game.queue("quest", (self.name, self.rewards, self.comptext))
 
 # manages quests
 class QuestManager ():
@@ -497,8 +521,11 @@ class Runner ():
             "i-looted" : 0,
         }
         self.listen(self.questmanager.event)
+        self._queue : List[Tuple[str, list]] = []
     ## reward
-    def reward (self, reward : dict) -> None:
+    def reward (self, reward : dict, indent : int = 0) -> None:
+        global globalindent
+        globalindent = indent
         n = reward["name"]
         if (n == "XP"):
             a = int(reward["amount"])
@@ -512,12 +539,25 @@ class Runner ():
                 a = int(reward["amount"])
                 self.player.inventory.maxslots += a
                 _game_print(f"you inventory capacity was increased by {a}, raising total capacity to {self.player.inventory.maxslots}")
+        globalindent = 0
     ## quests
     def get_quest (self, qid : str) -> dict:
         quests = self.full_data["quests"]
         for q in quests:
             if (q["qid"] == qid):
                 return q
+    def queue (self, itype : str, data : Tuple[str, list]) -> None:
+        self._queue.append((itype, data))
+    def _empty_queue (self) -> None:
+        for i in range(len(self._queue)):
+            item = self._queue.pop(0)
+            itype = item[0]
+            data = item[1]
+            if (itype in ("task", "quest")):
+                _game_print(f"{itype} \"{data[0]}\" completed")
+                for r in data[1]:
+                    self.reward(r, indent=1)
+                _game_print(f"{ANSI.violet}{ANSI.italic}{data[2]}{ANSI.unitalic}{ANSI.default_text}")
     ## events
     def listen (self, listener, kind : str = "any", specific : str = "null") -> None:
         self.listeners[kind][specific].append(listener)
@@ -954,6 +994,9 @@ class Runner ():
             q = self.questmanager.quests[text]
             t : Task = q.tasks[q.prog]
             _game_print(f"current task:\n\tname: {t.text}\n\tinstuctions: {t.instructions}")
+        elif (text == "update"):
+            _game_print("updating quests")
+            self.questmanager.event("any", "null")
     ## input
     def parse_input (self, text : str) -> None:
         if (_dev):
@@ -1024,17 +1067,17 @@ class Runner ():
                 self._peek(text)
         # check player status
         elif (text == "status"):
-            current_health = "\u2665"*self.player.health
-            total_health = "\u2661"* (self.player.maxh - self.player.health)
-            health_color = "\x1b[0m"
+            current_health = ANSI.heart * self.player.health
+            total_health = ANSI.empty_heart * (self.player.maxh - self.player.health)
+            health_color = ANSI.default_text
             percentage = self.player.health / self.player.maxh
             if percentage <= 1.0 and percentage > .75:
-                health_color = "\x1b[38;2;0;200;0m"
+                health_color = ANSI.health_high
             elif percentage <= .75 and percentage > .25:
-                health_color = "\x1b[38;2;245;245;0m"
+                health_color = ANSI.health_medium
             elif percentage <= .25:
-                health_color = "\x1b[38;2;245;0;0m"
-            _game_print(f"health: {health_color}{current_health}{total_health}\x1b[0m\nattack: {self.player.calc_stat('a')}\ndefense: {self.player.calc_stat('d')}\nstamina: {self.player.calc_stat('s')}\nmana: {self.player.calc_stat('m')}")
+                health_color = ANSI.health_low
+            _game_print(f"health: {health_color}{current_health}{total_health}{ANSI.default_text}\nattack: {self.player.calc_stat('a')}\ndefense: {self.player.calc_stat('d')}\nstamina: {self.player.calc_stat('s')}\nmana: {self.player.calc_stat('m')}")
         # regain strength
         elif (text == "rest"):
             self.player.stamina = self.player.maxs
@@ -1104,6 +1147,7 @@ class Runner ():
                 self._inspect()
             else:
                 self.parse_input(inp)
+            self._empty_queue()
             if (self.gameover):
                 self.lostgame()
                 break
