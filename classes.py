@@ -19,6 +19,8 @@ from datatables import itemmaxs, itemnamesets, itemmins, bodyslotnames, enemymin
 from random import choice, randrange
 from numpy import ceil, floor
 from time import sleep
+from parsers import nqs
+import json
 
 globalindent = 0
 
@@ -1142,19 +1144,21 @@ class Runner ():
         readline.read_history_file("history.txt")
     ## main start
     def start (self) -> None:
-        if (not _dev):
+        if (not _dev and SaveLoader.load()):
             _run_teach()
         while True:
             inp = input("\x1b[2K> ")
             if (inp == "save"):
                 SaveLoader.save()
             elif (inp == "load"):
-                SaveLoader.load()
+                if (_dev):
+                    SaveLoader.load()
             elif (inp == "quit"):
                 if (_dev):
                     break
                 if (input("type \"yes\" to confirm: ") != "yes"):
                     continue
+                SaveLoader.save()
                 break
             elif (inp == "inspect" and _dev):
                 self._inspect()
@@ -1177,6 +1181,14 @@ class SaveLoader ():
                 pass
         except FileExistsError:
             pass
+        self.checks = {
+            "-- states" : ["event", "counts", "evflags"],
+            "-- player" : ["health", "attack", "defense", "stamina", "mana", "lvl", "xp", "xpr", "xpm"],
+            "-- inventory" : ["capacity"],
+            "-- equipped" : bodyslotnames,
+            "-- location" : ["data", "room"],
+            "-- quests" : []
+        }
     def _fileman (self, rw : bool = False, data : str = ""):
         with open(f"{self._sf_name}.{self._sf_ext}", ("w" if rw else "r")) as f:
             if (rw):
@@ -1187,9 +1199,182 @@ class SaveLoader ():
             return lines
     ## save
     def save (self) -> None:
-        pass
+        def fitem (item : Item) -> str:
+            return f"<{bodyslotnames[item.type].upper()} name=\"{item.name}\" h={item.stats['h']} a={item.stats['a']} d={item.stats['d']} s={item.stats['s']} m={item.stats['m']} lvl={item.level} xp={item.xp} xpr={item.reqxp} xpm={item.levelmod}>"
+        lines = []
+        ### build the states block
+        lines.append("{")
+        lines.append("\t-- states")
+        # gets current event id
+        ev = 1 if game.incombat else (2 if game.indialog else (3 if game.ininvent else (4 if game.inquestm else (5 if game.inshopin else 0))))
+        lines.append(f"\tevent = {ev}")
+        # counts
+        lines.append(f"\tcounts = {json.dumps(game.counts)}")
+        # event flags
+        lines.append(f"\tevflags = {json.dumps(game.evflags)}")
+        lines.append("}")
+        ### build the player block
+        lines.append("{")
+        lines.append("\t-- player")
+        lines.append(f"\thealth = {game.player.health}/{game.player.maxh}")
+        lines.append(f"\tattack = {game.player.attack}")
+        lines.append(f"\tdefense = {game.player.defense}")
+        lines.append(f"\tstamina = {game.player.stamina}/{game.player.maxs}")
+        lines.append(f"\tmana = {game.player.mana}/{game.player.maxm}")
+        lines.append(f"\tlvl = {game.player.level}")
+        lines.append(f"\txp = {game.player.xp}")
+        lines.append(f"\txpr = {game.player.reqxp}")
+        lines.append(f"\txpm = {game.player.levelingmod}")
+        lines.append("}")
+        ### build the inventory block
+        lines.append("{")
+        lines.append("\t-- inventory")
+        lines.append(f"\tcapacity = {game.player.inventory.maxslots}")
+        for item in game.player.inventory.slots:
+            lines.append(f"\t{fitem(item)}")
+        lines.append("}")
+        ### build the equipped block
+        lines.append("{")
+        lines.append("\t-- equipped")
+        for n in bodyslotnames:
+            lines.append(f"\t{n} = {'EMPTY' if game.player.inventory.body[n] == None else fitem(game.player.inventory.body[n])}")
+        lines.append("}")
+        ### build the location block
+        lines.append("{")
+        lines.append("\t-- location")
+        lines.append(f"\tdata = {json.dumps(game.area_data)}")
+        lines.append(f"\troom = \"{game.room_data['uid']}\"")
+        lines.append("}")
+        ### build the quests block
+        lines.append("{")
+        lines.append("\t-- quests")
+        for q in game.questmanager.quests:
+            lines.append(f"\t<QUEST qid={q.qid} prog={q.prog} completed=false>")
+        for q in game.questmanager.completed:
+            lines.append(f"\t<QUEST qid={q.qid} prog={q.prog} completed=true>")
+        lines.append("}")
+        self._fileman(True, "\x1c".join(lines).replace("\n","\\n").replace("\t","\\t").replace("\x1c","\n"))
+    def _bfind (self, block : List[str], search : str) -> int:
+        for i in range(len(block)):
+            if (block[i].startswith(search)):
+                return i
+        return -1
+    def _checkblock (self, searches : List[str], block : List[str]) -> bool:
+        for search in searches:
+            if (self._bfind(block, search) < 0):
+                return True
+        return False
+    def _destrut (self, l : str) -> dict:
+        d = {}
+        l = nqs(l[1:-1], " ")
+        d["type"] = l.pop(0)
+        for x in l:
+            x = x.split("=")
+            d[x[0]] = x[1][1:-1] if "\"" in x else ({"true":True, "false":False} if x[1] in ("true", "false") else (float(x[1] if "." in x[1] else int(x[1]))))
+        return d
+    def _parseblock (self, block : List[str]) -> None:
+        # block header
+        bid = None
+        # get block header
+        for i in range(len(block)):
+            l = block[i]
+            if (l.startswith("-- ")):
+                bid = block.pop(i)
+                break
+        # ensure that block has a header
+        if (bid == None):
+            return
+        # ensure that all properties exist in block
+        if (self._checkblock(self.checks[bid], block)):
+            return
+        ### parse states block
+        if (bid == "-- states"):
+            # event
+            l = int(block.pop(self._bfind(block, "event")).split(" ")[2])
+            game.incombat = True if l == 1 else False
+            game.indialog = True if l == 2 else False
+            game.ininvent = True if l == 3 else False
+            game.inquestm = True if l == 4 else False
+            game.inshopin = True if l == 5 else False
+            # counts
+            game.counts = json.loads(block.pop(self._bfind(block, "counts")).split(" ", 2)[2])
+            # ev flags
+            game.evflags = json.loads(block.pop(self._bfind(block, "evflags")).split(" ", 2)[2])
+        ### parse player block
+        elif (bid == "-- player"):
+            p = game.player
+            l = block.pop(self._bfind(block, "health")).split(" ")[2].split("/")
+            p.health = int(l[0])
+            p.maxh = int(l[1])
+            p.attack = int(block.pop(self._bfind(block, "attack")).split(" ")[2])
+            p.defense = int(block.pop(self._bfind(block, "defense")).split(" ")[2])
+            l = block.pop(self._bfind(block, "stamina")).split(" ")[2].split("/")
+            p.stamina = int(l[0])
+            p.maxs = int(l[1])
+            l = block.pop(self._bfind(block, "mana")).split(" ")[2].split("/")
+            p.mana = int(l[0])
+            p.maxm = int(l[1])
+            p.level = int(block.pop(self._bfind(block, "lvl")).split(" ")[2])
+            p.xp = int(block.pop(self._bfind(block, "xp")).split(" ")[2])
+            p.reqxp = int(block.pop(self._bfind(block, "xpr")).split(" ")[2])
+            p.levelingmod = float(block.pop(self._bfind(block, "xpm")).split(" ")[2])
+        ### parse inventory block
+        elif (bid == "-- inventory"):
+            inv = game.player.inventory
+            inv.maxslots = int(block.pop(self._bfind(block, "capacity")).split(" ")[2])
+            for i in range(len(block)):
+                l = block.pop(i)
+                it = self._dstrut(l)
+                inv.slots.append(Item(bodyslotnames.index(it["type"].lower()), it["name"], {"h":int(it["h"]),"a":int(it["a"]),"d":int(it["d"]),"s":int(it["s"]),"m":int(it["m"])}, int(it["lvl"]), int(it["xp"]), int(it["xpr"]), float(it["xpm"])))
+        ### parse equipped block
+        elif (bid == "-- equipped"):
+            inv = game.player.inventory
+            for i in range(len(bodyslotnames)):
+                sn = bodyslotnames[i]
+                l = block.pop(self._bfind(block, sn)).split(" ", 2)[2]
+                if l == "EMPTY":
+                    inv.body[sn] = None
+                else:
+                    it = self._dstruct(l)
+                    inv.body[sn] = Item(i, it["name"], {"h":int(it["h"]),"a":int(it["a"]),"d":int(it["d"]),"s":int(it["s"]),"m":int(it["m"])}, int(it["lvl"]), int(it["xp"]), int(it["xpr"]), float(it["xpm"]))
+        ### parse location block
+        elif (bid == "-- location"):
+            l = block.pop(self._bfind(block, "data")).split(" ", 2)[2]
+            game.area_data = json.loads(l)
+            r = block.pop(self._bfind(block, "room")).split(" ")[2][1:-1]
+            game.load_room(game._grabroom(r))
+        ### parse quests block
+        elif (bid == "-- quests"):
+            for i in range(len(block)):
+                l = block.pop(0)
+                qu = self._dstrut(l)
+                q = game.get_quest(qu["qid"])
+                q["prog"] = qu["prog"]
+                q = Quest(q)
+                if (qu["completed"]):
+                    q.done = True
+                    q.rag = True
+                    game.questmanager.completed.append(q)
+                else:
+                    game.questmanager.add_quest(q)
     ## load
     def load (self) -> None:
-        pass
+        lines = self._fileman().split("\n")
+        blocks = []
+        # break lines into blocks
+        cblock = []
+        for i in range(len(lines)):
+            line = lines[i]
+            if (line == "}"):
+                blocks.append(cblock)
+                cblock = []
+                continue
+            if (line == "{"):
+                continue
+            cblock.append(line.lstrip())
+        for block in blocks:
+            # print(block, end="\n\n")
+            self._parseblock(block)
+
 
 SaveLoader = SaveLoader()

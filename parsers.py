@@ -17,6 +17,23 @@ with open("content.amly" if not _dev else "pt.amly") as f:
 # final data list
 datums = []
 
+# splits by sep when outside of quotes
+def nqs (string : str, sep : str):
+    f = string.split(sep)
+    i = 0
+    while i < len(f)-1:
+        if (i >= len(f)):
+            break
+        if (f[i].count("\"") % 2 != 0):
+            f[i] = f[i] + " " + f.pop(i+1)
+        i += 1
+    if (f[-1].count("\"") % 2 != 0):
+        a = f.pop()
+        f.append(f.pop() + " " + a)
+    for i in range(len(f)):
+        f[i] = f[i].replace("\"", "")
+    return f
+
 # parses a "document"
 def parse (rawline : str):
     # checks that it's not empty
@@ -106,22 +123,6 @@ def parse (rawline : str):
         for step in blockpath:
             tmp = tmp[step]
         return tmp
-    # splits by sep when outside of quotes
-    def nqs (string : str, sep : str):
-        f = string.split(sep)
-        i = 0
-        while i < len(f)-1:
-            if (i >= len(f)):
-                break
-            if (f[i].count("\"") % 2 != 0):
-                f[i] = f[i] + " " + f.pop(i+1)
-            i += 1
-        if (f[-1].count("\"") % 2 != 0):
-            a = f.pop()
-            f.append(f.pop() + " " + a)
-        for i in range(len(f)):
-            f[i] = f[i].replace("\"", "")
-        return f
     # data structure parsing
     def datstruct (line : str):
         line = nqs(line[1:-1], " ")
