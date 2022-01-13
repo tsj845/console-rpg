@@ -19,20 +19,20 @@ datums = []
 
 # splits by sep when outside of quotes
 def nqs (string : str, sep : str):
-    f = string.split(sep)
-    i = 0
-    while i < len(f)-1:
-        if (i >= len(f)):
-            break
-        if (f[i].count("\"") % 2 != 0):
-            f[i] = f[i] + " " + f.pop(i+1)
-        i += 1
-    if (f[-1].count("\"") % 2 != 0):
-        a = f.pop()
-        f.append(f.pop() + " " + a)
-    for i in range(len(f)):
-        f[i] = f[i].replace("\"", "")
-    return f
+    string = string.split("\"")
+    for i in range(0, len(string), 2):
+        string[i] = string[i].replace(sep, "\x1c")
+    for i in range(1, len(string), 2):
+        string[i] = "\"" + string[i] + "\""
+    string = "".join(string)
+    ol = len(string)
+    for i in range(ol):
+        i = ol - i - 1
+        if (string[i] == ""):
+            string.pop(i)
+    return string.split("\x1c")
+
+# print(nqs('x="y z 1" n', " "))
 
 # parses a "document"
 def parse (rawline : str):
@@ -130,6 +130,9 @@ def parse (rawline : str):
         struct = {"name":line.pop(0)}
         for x in line:
             x = x.split("=")
+            # print(x)
+            if (x[1][0] == "\""):
+                x[1] = x[1][1:-1]
             struct[x[0]] = x[1]
         return struct
     flatlist = False

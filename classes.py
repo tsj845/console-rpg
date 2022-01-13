@@ -1264,13 +1264,15 @@ class SaveLoader ():
             if (self._bfind(block, search) < 0):
                 return True
         return False
-    def _destrut (self, l : str) -> dict:
+    def _dstrut (self, l : str) -> dict:
         d = {}
         l = nqs(l[1:-1], " ")
+        # print(l)
         d["type"] = l.pop(0)
         for x in l:
             x = x.split("=")
-            d[x[0]] = x[1][1:-1] if "\"" in x else ({"true":True, "false":False} if x[1] in ("true", "false") else (float(x[1] if "." in x[1] else int(x[1]))))
+            print(x)
+            d[x[0]] = x[1][1:-1] if "\"" in x[1] else ({"true":True, "false":False} if x[1] in ("true", "false") else (float(x[1] if "." in x[1] else int(x[1]))))
         return d
     def _parseblock (self, block : List[str]) -> None:
         # block header
