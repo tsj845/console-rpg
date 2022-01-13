@@ -2,6 +2,7 @@ _dev = True
 
 import sys
 import readline
+import atexit
 from typing import Dict, List, Tuple, Union, Any
 
 try:
@@ -1144,7 +1145,7 @@ class Runner ():
         readline.read_history_file("history.txt")
     ## main start
     def start (self) -> None:
-        if (not _dev and SaveLoader.load()):
+        if (SaveLoader.load() and not _dev):
             _run_teach()
         while True:
             inp = input("\x1b[2K> ")
@@ -1253,7 +1254,7 @@ class SaveLoader ():
         for q in game.questmanager.completed:
             lines.append(f"\t<QUEST qid={q.qid} prog={q.prog} completed=true>")
         lines.append("}")
-        self._fileman(True, "\x1c".join(lines).replace("\n","\\n").replace("\t","\\t").replace("\x1c","\n"))
+        self._fileman(True, "\x1c".join(lines).replace("\n","\\n").replace("\x1c","\n"))
     def _bfind (self, block : List[str], search : str) -> int:
         for i in range(len(block)):
             if (block[i].startswith(search)):
@@ -1271,7 +1272,7 @@ class SaveLoader ():
         d["type"] = l.pop(0)
         for x in l:
             x = x.split("=")
-            print(x)
+            # print(x)
             d[x[0]] = x[1][1:-1] if "\"" in x[1] else ({"true":True, "false":False} if x[1] in ("true", "false") else (float(x[1] if "." in x[1] else int(x[1]))))
         return d
     def _parseblock (self, block : List[str]) -> None:
@@ -1337,7 +1338,7 @@ class SaveLoader ():
                 if l == "EMPTY":
                     inv.body[sn] = None
                 else:
-                    it = self._dstruct(l)
+                    it = self._dstrut(l)
                     inv.body[sn] = Item(i, it["name"], {"h":int(it["h"]),"a":int(it["a"]),"d":int(it["d"]),"s":int(it["s"]),"m":int(it["m"])}, int(it["lvl"]), int(it["xp"]), int(it["xpr"]), float(it["xpm"]))
         ### parse location block
         elif (bid == "-- location"):
@@ -1361,7 +1362,10 @@ class SaveLoader ():
                     game.questmanager.add_quest(q)
     ## load
     def load (self) -> None:
-        lines = self._fileman().split("\n")
+        lines = self._fileman()
+        if (len(lines) < 10):
+            return True
+        lines = lines.split("\n")
         blocks = []
         # break lines into blocks
         cblock = []
@@ -1377,6 +1381,9 @@ class SaveLoader ():
         for block in blocks:
             # print(block, end="\n\n")
             self._parseblock(block)
+        return False
 
 
 SaveLoader = SaveLoader()
+
+atexit.register(SaveLoader.save)
