@@ -39,8 +39,7 @@ UID INDEX {
     content.amly -> triggers - ##UID1-8
     content.amly -> triggers -> compound triggers - ##UID18-0
     content.amly -> npc dialog triggers - ##UID1-9
-    // save undefined numerical id not ready
-    save.tssvf - ##UID--SVUNDEF--NUMID--NR
+    save.tssvf - ##UID2
 }
 
 ##UID0
@@ -314,7 +313,59 @@ content.amly {
     }
 }
 
-##UID--SVUNDEF--NUMID--NR
+##UID2
 save.tssvf {
-    specifications are not and will not be defined until most of the game is done so that specifications will not need constant updating to accomedate basic features
+    syntax {
+        - data blocks are defined using curly brackets "{}"
+        - each data block contains a header and key = value pairs
+        - headers are "-- [header name]", the header is used to tell the parser exactly what data is contained within the block
+        - whitespace is ignored
+    }
+    example {
+        {
+            -- states
+            event = 0
+            counts = [JSON of game.counts]
+            evflags = [JSON of game.evflags]
+        }
+        {
+            -- player
+            health = 10/10
+            attack = 1
+            defense = 0
+            stamina = 2/2
+            mana = 0/0
+            xp = 0
+            xpr = 0
+            xpm = 1.2
+        }
+        {
+            -- inventory
+            capacity = 10
+            <WEAPON name="terrible weapon" h=0 a=0 d=0 s=0 m=0 lvl=0 xp=0 xpr=0 xpm=0>
+        }
+        {
+            -- equipped
+            head = EMPTY
+            body = EMPTY
+            legs = EMPTY
+            boots = EMPTY
+            weapon = EMPTY
+            shield = EMPTY
+            charm = EMPTY
+        }
+        {
+            -- location
+            data = [JSON of game.area_data]
+            room = "hall 2"
+        }
+        {
+            -- quests
+            <QUEST qid=0 prog=4 completed=true>
+        }
+        {
+            -- combat
+            yet to be defined
+        }
+    }
 }
