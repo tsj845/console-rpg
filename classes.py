@@ -45,13 +45,26 @@ class ANSI ():
     dark_blue = "\x1b[38;2;50;255;0m"
     violet = "\x1b[38;2;200;100;200m"
     default_text = "\x1b[39m"
+    default_background = "\x1b[49m"
+    # ANSI effects
     italic = "\x1b[3m"
     unitalic = "\x1b[23m"
     bold = "\x1b[1m"
-    unbold = "\x1b[22m"
+    faint = "\x1b[2m"
+    normal_intensity = "\x1b[22m"
+    underline = "\x1b[4m"
+    nounderline = "\x1b[24m"
+    strike = "\x1b[9m"
+    unstrike = "\x1b[29m"
     reset = "\x1b[0m"
+    # characters
     empty_heart = "\u2661"
     heart = "\u2665"
+    # functions
+    def foreground (r : int, g : int, b : int) -> str:
+        return f"\x1b[38;2;{r};{g};{b}m"
+    def background (r : int, g : int, b : int) -> str:
+        return f"\x1b[48;2;{r};{g};{b}m"
 
 # ANSI = ANSI()
 
