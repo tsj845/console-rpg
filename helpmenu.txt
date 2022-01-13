@@ -1,0 +1,15 @@
+base commands:
+    quit
+    inven
+    walk [destination]
+    list [options?]
+    peek [target]
+    combat commands:
+    list
+    status
+    attack [target]
+    rest
+
+inventory commands:
+    back
+    list [target]

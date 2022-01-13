@@ -4,6 +4,7 @@ import sys
 import readline
 import atexit
 from typing import Dict, List, Tuple, Union, Any
+import json
 
 try:
     with open("history.txt", "x"):
@@ -336,6 +337,8 @@ class Player ():
         elif (statid == "m"):
             self.mana = value
             x = "mana"
+        elif (statid == "maxh"):
+            self.maxh = value
         _game_print(f"player stat {x} set to {value}" if x != None else f"failed to set player stat {statid}")
     def takedmg (self, amount : int) -> bool:
         amount : int = max(0, amount - self.calc_stat("d"))
@@ -1099,6 +1102,34 @@ class Runner ():
             self.player.stamina = self.player.maxs
             self.player.mana += ceil((self.player.maxm - self.player.mana) / 2)
             _game_print("you rest to regain your strength")
+        # help menu
+        elif (text.startswith("help")):
+            with open("help_text.json") as file:
+                help_text = json.loads(file.read())
+
+            t = text.split(" ")
+            length = len(t)
+            if length == 1:
+                _game_print(f"\x1b[32mtype help [category] for the list of all its commands\x1b[0m\n{help_text['help']}")
+                return
+            
+            elif t[1] in ("base", "inven"):
+                help_t = help_text[t[1]]
+                if length == 3:
+                    if t[2] in help_t["cmds"].keys():
+                        _game_print(help_t["cmds"][t[2]])
+                        return
+                    else:
+                        _game_print(f"\x1b[31m'{t[2]}' does not exist or is not implemented\x1b[0m")
+                        return
+                else:
+                    _game_print(f"\x1b[32mfor more info on a command type help {t[1]} [command]\x1b[0m\n{help_t['list']}")
+                    return
+            
+            else:
+                _game_print(f"\x1b[31m'{t[1]}' is not a category\x1b[0m") 
+                return
+
         if (self.incombat):
             self._parse_combin(text)
         self.trigger_event("input", "null", text)

@@ -1,0 +1,35 @@
+{
+    "help": "base - basic stuff\ninventory (type inven) - used when in inventory mode\nquest - commands relating to questing\ndialog - commands for when in dialog",
+    "base": 
+        {
+            "list":
+                "base commands:\nquit\ninven\nwalk [destination]\nlist [options?]\npeek [target]\ncombat commands:\nlist\nstatus\nattack [target]\nrest",
+            "cmds": {
+                "quit": "quit - Exits the game. Requires a confirmation before exiting, unless in dev mode.",
+                "inven": "inven - Opens the inventory. Inventory mode has its own section of commands (see \u001b[32mhelp inven\u001b[0m)",
+                "quests": "quests - opens the quest manager",
+                "walk": "walk [destination] - walks to [destination] where [destination] is a room name as listed by the 'list doors' command",
+                "talk": "talk [uid] - talks to npc [uid] where [uid] is the 1-based index of the npc as it appears in the 'list npcs' command",
+                "rest": "rest - has the player rest to regain stamina",
+                "loot": "loot [uid] - loots chest [uid] where [uid] is the 1-based index of the chest as displayed in the 'list chests' command, this will fail if the player has no available inventory slots",
+                "peek": "peek [destination] - lists the [destination] room where [destination] is the same as the 'walk' command",
+                "status": "status - displays the player's status (health, attack/defense/mana pts, etc)"
+            }
+        },
+    "inven":
+        {
+            "list":
+                "inventory commands:\nback\nlist [target]",
+            "cmds": {
+                "back": "leaves the inventory",
+                "fill status": "fill status - fill status - displays the number of currently used to available slots",
+                "drop": "drop [uid] - drops item [uid] where [uid] is the 1-based index of the item as displayed using the 'list items' command",
+                "equip": "equip [slot name] [uid] - equips item [uid] to slot [slot name] where [uid] is the same as the 'drop' command and [slot name] is the full name of the slot",
+                "list": "list [target] - where [target] is one of ('inven' or 'items') to list inventory and 'body' to list body slots"
+            }
+        },
+    "combat":
+        {
+            "list": "combat commands: "
+        }
+}
