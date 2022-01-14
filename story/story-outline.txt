@@ -1,3 +1,12 @@
-Premise
+Long ago, a dragon named Kyramin ruled the town of Farcrest. 
+The humans, knowing the power of the great dragon, made a
+deal with him. The agreement was simple: the humans would provide 
+support for Kyramin, and in exchange he would provide protection 
+from the rivaling dragons coming from the underworld.
 
- 
+Now, over a thousand years later, Farcrest is in chaos. Kyramin is 
+missing, and without his support, Farcrest cannot protect itself from
+the incoming dragons. The town elders have sent you on a quest to find 
+Kyramin, and there's only one place he could be:
+
+The Underworld.
