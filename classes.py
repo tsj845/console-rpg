@@ -734,9 +734,18 @@ class Runner ():
         self.area_data = data.copy()
         self.load_room(self.area_data["rooms"][int(self.area_data["startroom"])] if self.area_data["startroom"].isdigit() else self._grabroom(self.area_data["startroom"]))
         self.trigger_event("load", "area", self.area_data)
+    def _do_prob (self, data : dict) -> None:
+        l = data["list"]
+        ol = len(l)
+        for i in range(ol):
+            i = ol - i - 1
+            if ("spawn-chance" in l[i]):
+                if (randrange(0, 100) >= int(l[i]["spawn-chance"])):
+                    l.pop(i)
     def load_room (self, data : dict) -> None:
         self.room_data = data
         self.room_data["visit"] = None
+        self._do_prob(data)
         self._upltunid()
         self.trigger_event("load", "room", data)
         self._check_combat()
