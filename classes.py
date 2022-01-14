@@ -14,11 +14,14 @@ except FileExistsError:
 
 _dev = False
 _nosave = False
+_mansave = False
 
 if ("-s" in sys.argv):
     _dev = True
 if ("-n" in sys.argv):
     _nosave = True
+    if ("-ms" in sys.argv):
+        _mansave = True
 
 from datatables import itemmaxs, itemnamesets, itemmins, bodyslotnames, enemymins, enemymaxs, pitemmins, pitemmaxs, pitemnames
 from random import choice, randrange
@@ -1210,7 +1213,12 @@ class Runner ():
         while True:
             inp = input("\x1b[2K> ")
             if (inp == "save"):
+                global _nosave
+                if (_mansave):
+                    _nosave = False
                 SaveLoader.save()
+                if (_mansave):
+                    _nosave = True
             elif (inp == "load"):
                 if (_dev):
                     SaveLoader.load()

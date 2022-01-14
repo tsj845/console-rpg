@@ -48,6 +48,8 @@ game running {
     
     if "-n" is passed to the script saving is disabled entirely as SaveLoader.save() will return early, use this option when doing testing on things that break save files
 
+    if "-ms" is passed with "-n" manual saving will be enabled
+
     ##UID0-0
     dev mode {
         allows use of dev commands
