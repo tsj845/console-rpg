@@ -390,7 +390,7 @@ class NPC ():
         t : int = int(dat["etype"])
         if (t == 0):
             self.pos += 1
-            return dat["text"]
+            return dat["text"].replace("{green}", ANSI.help_green).replace("{red}", ANSI.help_red).replace("{stop}", ANSI.reset)
         elif (t == 1):
             if (op != None):
                 if (op in dat["opts"].keys() and dat != "name"):
@@ -666,7 +666,7 @@ class Runner ():
             self.enemies.append(ene)
             self.netq.append(ene)
         self.incombat = True
-        _game_print("entering combat...")
+        _game_print(f"{ANSI.red}ENTERING COMBAT{ANSI.reset}")
         self.trigger_event("combat", "start")
     def _enemy_atk (self) -> None:
         en = self.netq.pop(0)
@@ -699,9 +699,9 @@ class Runner ():
             return
         self.player.stamina -= 1
         en = self.enemies[text]
-        _game_print(f"enemy {text} took {max(0, self.player.calc_stat('a') - en.calc_stat('d'))} damage")
+        _game_print(f"Enemy {text} took {max(0, self.player.calc_stat('a') - en.calc_stat('d'))} damage")
         if (en.takedmg(self.player.calc_stat("a"))):
-            _game_print(f"enemy {text} was defeated")
+            _game_print(f"Enemy {text} was defeated!")
             self.netq.pop(self.netq.index(en))
             ind = self.enemies.index(en)
             self.enemies.pop(ind)
@@ -717,7 +717,7 @@ class Runner ():
             if (len(self.enemies) == 0):
                 self.incombat = False
                 self.player.reset_values()
-                _game_print("exiting combat...")
+                _game_print(f"{ANSI.help_green}You won!{ANSI.reset}")
                 self.trigger_event("combat", "win")
         if (len(self.enemies) > 0):
             self._enemy_atk()
