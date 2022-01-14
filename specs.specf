@@ -2,8 +2,9 @@
 UID INDEX {
     UID INDEX - ##INDEX
     game running - ##UID0
-    game running -> dev mod - ##UID0-0
+    game running -> dev mode - ##UID0-0
     game running -> dev mode -> dev commands - ##UID01-0
+    game running -> dev mode -> deb commands -> quirks with inspect - ##UID010-0
     game running -> basic commands - ##UID01-1
     game running -> inventory commands - ##UID01-2
     game running -> quest commands - ##UID01-3
@@ -62,8 +63,15 @@ game running {
             sps - sets player stat value, "sps [statid] [value]"
             ses - sets enemy stat value, "ses [eid] [statid] [value]"
             genitem - generates an item in the player's inventory regardless of slot capacity, "genitem [slotid] [name (replace spaces with '-')] [health] [attack] [defense] [stamina] [mana] (further arguments are optional and all default to zero) [level] [xp] [xpr] [xpm]"
-            inspect - opens the inspector, uses eval so for variable assignment do exec("[statement]"), type "exit" to return to main game, has scope within the Runner so "self" returns the game object
+            inspect - opens the inspector, uses eval so for variable assignment do exec("[statement]"), type "exit" to return to main game, has scope within the Runner so "self" returns the game object see "quirks with inspect" UID010-0
             load - loads save data
+
+            ##UID010-0
+            quirks with inspect {
+                -- when setting variables "exec" must be used
+
+                -- type "exit" to go back to the game
+            }
         }
 
         ##UID01-1
