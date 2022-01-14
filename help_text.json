@@ -1,5 +1,5 @@
 {
-    "help": "base - basic stuff\ninventory (type inven) - used when in inventory mode\nquest - commands relating to questing\ndialog - commands for when in dialog",
+    "help": "base - basic stuff\ninventory (type inven) - used when in inventory mode\nquest - commands relating to questing\ndialog - commands for when in dialog\ncombat - commands for when in combat",
     "base": 
         {
             "list":
@@ -30,6 +30,29 @@
         },
     "combat":
         {
-            "list": "combat commands: "
+            "list": "combat commands:\nattack [target]\nlist\nrest",
+            "cmds": {
+                "attack": "attack [target] - attacks [target] where [target] is the 1-based index of the enemy as displayed by the command 'list', an enemy will attack after this action",
+                "list": "list - lists enemies",
+                "rest": "rest - does normal rest followed by an enemy attack"
+            }
+        },
+    "quest":
+        {
+            "list": "quest commands:\nback\nlist [complete?]\ntask [uid]\nupdate",
+            "cmds": {
+                "back": "back - leaves the quest manager",
+                "list": "list [complete?] - if complete is given will list completed quests, if omitted will list active quests",
+                "task": "task [uid] - gives details on the current task for quest [uid] where [uid] is the 1-based index of the quest as shown by the 'list' command",
+                "update": "update - updates all active quests use if for some reason a quest isn't completed"
+            }
+        },
+    "dialog":
+        {
+            "list": "dialog commands:\nleave\n[any?]",
+            "cmds": {
+                "leave": "leave - exits dialog early",
+                "[any?]": "[any?] - will go to the next line of dialog, if an option is presented then the given argument will be checked against the options, when a match is found that option will be used"
+            }
         }
 }
