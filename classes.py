@@ -37,6 +37,8 @@ def _run_teach () -> None:
 # stores ansi codes for repeated use
 class ANSI ():
     # ANSI COLORS
+    help_green = "\x1b[38;2;18;188;121m"
+    help_red = "\x1b[205;49;49m"
     health_high = "\x1b[38;2;0;200;0m"
     health_medium = "\x1b[38;2;245;245;0m"
     health_low = "\x1b[38;2;245;0;0m"
@@ -1110,7 +1112,7 @@ class Runner ():
             t = text.split(" ")
             length = len(t)
             if length == 1:
-                _game_print(f"\x1b[32mtype help [category] for the list of all its commands\x1b[0m\n{help_text['help']}")
+                _game_print(f"{ANSI.help_green}type help [category] for the list of all its commands{ANSI.reset}\n{help_text['help']}")
                 return
             
             elif t[1] in ("base", "inven"):
@@ -1120,14 +1122,14 @@ class Runner ():
                         _game_print(help_t["cmds"][t[2]])
                         return
                     else:
-                        _game_print(f"\x1b[31m'{t[2]}' does not exist or is not implemented\x1b[0m")
+                        _game_print(f"{ANSI.help_red}'{t[2]}' does not exist or is not implemented{ANSI.reset}")
                         return
                 else:
-                    _game_print(f"\x1b[32mfor more info on a command type help {t[1]} [command]\x1b[0m\n{help_t['list']}")
+                    _game_print(f"{ANSI.help_green}for more info on a command type help {t[1]} [command]{ANSI.reset}\n{help_t['list']}")
                     return
             
             else:
-                _game_print(f"\x1b[31m'{t[1]}' is not a category\x1b[0m") 
+                _game_print(f"{ANSI.help_red}'{t[1]}' is not a category{ANSI.reset}")
                 return
 
         if (self.incombat):
