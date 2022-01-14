@@ -45,6 +45,8 @@ UID INDEX {
 ##UID0
 game running {
     if "-s" passed to the script then dev mode will be activated
+    
+    if "-n" is passed to the script saving is disabled entirely as SaveLoader.save() will return early, use this option when doing testing on things that break save files
 
     ##UID0-0
     dev mode {

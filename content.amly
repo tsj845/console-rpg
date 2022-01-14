@@ -9,7 +9,7 @@
             <CON target="hall 1">
         **/entry**
         **hall 1**
-            <ENEMY type=0 level=0 dabs=0>
+            <ENEMY etype=0 level=0 dabs=0>
             <CHEST level=0>
             <CON target=entry>
             <CON target="hall 2">
@@ -36,51 +36,51 @@
     cid = 0
     *&dialog**
         **d1**
-            trigger = <TRIG type=lit con=always>
+            trigger = <TRIG etype=lit con=always>
             link = d-1
         **/d1**
     **/dialog**
     **linedata**
         *&d-1**
             **0**
-                type = 0
+                etype = 0
                 text = hello there!
             **/0**
             **1**
-                type = 1
+                etype = 1
                 text = pick one
                 opts = <OPTG 0=l0 1=l1>
             **/1**
             **2**
-                type = 3
+                etype = 3
                 lname = l0
             **/2**
             **3**
-                type = 0
+                etype = 0
                 text = you chose option one
             **/3**
             **4**
-                type = 2
+                etype = 2
                 goto = l2
             **/4**
             **5**
-                type = 3
+                etype = 3
                 lname = l1
             **/5**
             **6**
-                type = 0
+                etype = 0
                 text = you chose option two
             **/6**
             **7**
-                type = 3
+                etype = 3
                 lname = l2
             **/7**
             **8**
-                type = 4
+                etype = 4
                 qid = 0
             **/8**
             **9**
-                type = 0
+                etype = 0
                 text = [END DIALOG]
             **/9**
         **/d-1**
@@ -173,7 +173,7 @@
     eid = tuten
     name = tutorial boss
     level = 0
-    type = 0
+    etype = 0
     baseh = 5
     based = 0
     basea = 1

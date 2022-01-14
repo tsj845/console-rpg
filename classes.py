@@ -12,10 +12,13 @@ try:
 except FileExistsError:
     pass
 
+_dev = False
+_nosave = False
+
 if ("-s" in sys.argv):
     _dev = True
-else:
-    _dev = False
+if ("-n" in sys.argv):
+    _nosave = True
 
 from datatables import itemmaxs, itemnamesets, itemmins, bodyslotnames, enemymins, enemymaxs, pitemmins, pitemmaxs, pitemnames
 from random import choice, randrange
@@ -182,7 +185,7 @@ class EnemyInventory ():
         # if preset was given do that
         if (preset != None):
             self.slots = preset["slots"]
-            self.classi = preset["type"]
+            self.classi = preset["etype"]
             self.name = preset["name"]
         else:
             self._gen_slots()
@@ -374,13 +377,13 @@ class NPC ():
     def _goto (self, g : str) -> int:
         for i in range(self.pos+1, len(self.linedata[self.active])):
             x : dict = self.linedata[self.active][i]
-            if (x["type"] == "3" and x["lname"] == g):
+            if (x["etype"] == "3" and x["lname"] == g):
                 return i
     def next (self, op : Union[None, str] = None) -> Union[bool, str, Tuple[str, list]]:
         if (self.pos >= len(self.linedata[self.active])):
             return False
         dat : dict = self.linedata[self.active][self.pos]
-        t : int = int(dat["type"])
+        t : int = int(dat["etype"])
         if (t == 0):
             self.pos += 1
             return dat["text"]
@@ -421,7 +424,7 @@ class Task ():
     # activates the task
     def activate (self) -> None:
         for t in self.triggers:
-            if (t["name"] == "COUNT"):
+            if (t["type"] == "COUNT"):
                 if ("o" in t):
                     t["c"] = game.counts[t["a"]] + int(t["o"])
                 else:
@@ -547,7 +550,7 @@ class Runner ():
     def reward (self, reward : dict, indent : int = 0) -> None:
         global globalindent
         globalindent = indent
-        n = reward["name"]
+        n = reward["type"]
         if (n == "XP"):
             a = int(reward["amount"])
             _game_print(f"you got {a} xp")
@@ -595,27 +598,27 @@ class Runner ():
             l(kind, specific, *data)
     def _room_has (self, typename : str) -> bool:
         for ent in self.room_data["list"]:
-            if (ent["name"] == typename):
+            if (ent["type"] == typename):
                 return True
         return False
     def _ge_all (self, typename : str) -> list:
         ents = []
         for ent in self.room_data["list"]:
-            if (ent["name"] == typename):
+            if (ent["type"] == typename):
                 ents.append(ent)
         return ents
     ## triggers
     def trigresult (self, trig : str) -> bool:
-        if (trig["type"] == "lit"):
+        if (trig["etype"] == "lit"):
             if (trig["con"] == "always"):
                 return True
             elif (trig["con"] == "never"):
                 return False
         return False
     def check_qt_trigger (self, trig : dict):
-        if (trig["name"] == "EVENT"):
+        if (trig["type"] == "EVENT"):
             return self.evflags[trig["kind"]+"-"+trig["specific"]]
-        elif (trig["name"] == "COUNT"):
+        elif (trig["type"] == "COUNT"):
             return self.counts[trig["a"]] >= trig["c"]
         return False
     ## combat
@@ -626,7 +629,7 @@ class Runner ():
                 if (en["eid"] == eid):
                     return en
         def getpreset (dat : dict) -> dict:
-            d = {"name":dat["name"], "type":int(dat["type"]), "health":int(dat["baseh"]), "attack":int(dat["basea"]), "defense":int(dat["based"]), "stamina":int(dat["bases"]), "mana":int(dat["basem"]), "slots":{}}
+            d = {"name":dat["name"], "type":int(dat["etype"]), "health":int(dat["baseh"]), "attack":int(dat["basea"]), "defense":int(dat["based"]), "stamina":int(dat["bases"]), "mana":int(dat["basem"]), "slots":{}}
             for slot in bodyslotnames:
                 if (slot in dat):
                     it = dat["items"][slot]
@@ -636,13 +639,13 @@ class Runner ():
             return d
         if ("eid" in data):
             dat = geten(data["eid"])
-            return int(dat["type"]), int(dat["level"]), getpreset(dat)
+            return int(dat["etype"]), int(dat["level"]), getpreset(dat)
         else:
-            return int(data["type"]), int(data["level"])
+            return int(data["etype"]), int(data["level"])
     def _upenunid (self) -> None:
         c = 0
         for ent in self.room_data["list"]:
-            if (ent["name"] == "ENEMY"):
+            if (ent["type"] == "ENEMY"):
                 ent["unid"] = c
                 c += 1
     def _check_combat (self) -> None:
@@ -701,7 +704,7 @@ class Runner ():
             lst = self.room_data["list"]
             for i in range(len(lst)):
                 ent = lst[i]
-                if (ent["name"] == "ENEMY" and ent["unid"] == ind):
+                if (ent["type"] == "ENEMY" and ent["unid"] == ind):
                     lst.pop(i)
                     self.trigger_event("combat", "enemy-death")
                     self.counts["kills"] += 1
@@ -717,13 +720,13 @@ class Runner ():
     def _upltunid (self) -> None:
         c = 0
         for ent in self.room_data["list"]:
-            if (ent["name"] == "CHEST"):
+            if (ent["type"] == "CHEST"):
                 ent["unid"] = c
                 c += 1
     def _upnpunid (self) -> None:
         c = 0
         for ent in self.room_data["list"]:
-            if (ent["name"] == "NPC"):
+            if (ent["type"] == "NPC"):
                 ent["unid"] = c
                 c += 1
     ## loading
@@ -749,7 +752,7 @@ class Runner ():
     def _getroomcons (self, room : dict, flat : bool = False) -> list:
         cons = []
         for ent in room["list"]:
-            if (ent["name"] == "CON"):
+            if (ent["type"] == "CON"):
                 cons.append(ent)
         if (flat):
             for i in range(len(cons)):
@@ -784,11 +787,11 @@ class Runner ():
             return {"name":"not found"}
         for i in range(len(room["list"])):
             ent = room["list"][i]
-            if (ent["name"] == "ENEMY"):
-                ents.append(f"<ENEMY type={etc[ent['type']]} level={ent['level']}>" if "type" in ent else f"<PREDEF name={ent['eid']}>")
-            elif (ent["name"] == "NPC"):
+            if (ent["type"] == "ENEMY"):
+                ents.append(f"<ENEMY type={etc[ent['etype']]} level={ent['level']}>" if "type" in ent else f"<PREDEF name={ent['eid']}>")
+            elif (ent["type"] == "NPC"):
                 ents.append(f"<NPC name={getnpc(ent['nid'])['name']}>")
-            elif (ent["name"] == "CHEST"):
+            elif (ent["type"] == "CHEST"):
                 ents.append(f"<CHEST level={ent['level']}>")
         if (len(search) > 4):
             search = search[5:]
@@ -891,6 +894,19 @@ class Runner ():
             _game_print(f"currently using {len(self.player.inventory.slots)} of {self.player.inventory.maxslots} slots")
     ## dialog entry
     def _start_dialog (self, text : str) -> None:
+        def gn (n : dict) -> dict:
+            n = n["nid"]
+            for np in self.full_data["npcs"]:
+                if (np["nid"] == n):
+                    return np
+        if (not text.isdigit()):
+            npcs = self._ge_all("NPC")
+            for i in range(len(npcs)):
+                n = gn(npcs[i])
+                if (n == None):
+                    continue
+                if (n["name"] == text):
+                    text = str(i+1)
         if (not text or not text.isdigit()):
             _game_print("invalid input")
             return
@@ -974,7 +990,7 @@ class Runner ():
         text = int(text) - 1
         for i in range(len(self.room_data["list"])):
             ent = self.room_data["list"][i]
-            if (ent["name"] == "CHEST" and ent["unid"] == text):
+            if (ent["type"] == "CHEST" and ent["unid"] == text):
                 self.room_data["list"].pop(i)
                 self._upltunid()
                 item = ItemManager.genitem(int(ent["level"]))
@@ -1235,6 +1251,8 @@ class SaveLoader ():
             return lines
     ## save
     def save (self) -> None:
+        if (_nosave):
+            return
         def fitem (item : Item) -> str:
             return f"<{bodyslotnames[item.type].upper()} name=\"{item.name}\" h={item.stats['h']} a={item.stats['a']} d={item.stats['d']} s={item.stats['s']} m={item.stats['m']} lvl={item.level} xp={item.xp} xpr={item.reqxp} xpm={item.levelmod}>"
         lines = []
@@ -1307,8 +1325,9 @@ class SaveLoader ():
         d["type"] = l.pop(0)
         for x in l:
             x = x.split("=")
-            # print(x)
-            d[x[0]] = x[1][1:-1] if "\"" in x[1] else ({"true":True, "false":False} if x[1] in ("true", "false") else (float(x[1] if "." in x[1] else int(x[1]))))
+            print(x, "\"" in x[1], x[1] in ("true", "false"), "." in x[1])
+            d[x[0]] = x[1][1:-1] if "\"" in x[1] else ({"true":True, "false":False}[x[1]] if x[1] in ("true", "false") else (float(x[1]) if "." in x[1] else int(x[1])))
+            print(d[x[0]])
         return d
     def _parseblock (self, block : List[str]) -> None:
         # block header
@@ -1379,13 +1398,14 @@ class SaveLoader ():
         elif (bid == "-- location"):
             l = block.pop(self._bfind(block, "data")).split(" ", 2)[2]
             game.area_data = json.loads(l)
-            r = block.pop(self._bfind(block, "room")).split(" ")[2][1:-1]
+            r = block.pop(self._bfind(block, "room")).split(" ", 2)[2][1:-1]
             game.load_room(game._grabroom(r))
         ### parse quests block
         elif (bid == "-- quests"):
             for i in range(len(block)):
                 l = block.pop(0)
                 qu = self._dstrut(l)
+                print(qu)
                 q = game.get_quest(qu["qid"])
                 q["prog"] = qu["prog"]
                 q = Quest(q)

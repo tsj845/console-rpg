@@ -127,7 +127,7 @@ def parse (rawline : str):
     def datstruct (line : str):
         line = nqs(line[1:-1], " ")
         # print(line)
-        struct = {"name":line.pop(0)}
+        struct = {"type":line.pop(0)}
         for x in line:
             x = x.split("=")
             # print(x)
