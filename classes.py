@@ -1117,7 +1117,7 @@ class Runner ():
                 _game_print(f(f"{ANSI.help_green}type help [category] for the list of all its commands{ANSI.reset}\n{help_text['help']}"))
                 return
             
-            elif t[1] in ("base", "inven"):
+            elif t[1] in help_text.keys():
                 help_t = help_text[t[1]]
                 if length == 3:
                     if t[2] in help_t["cmds"].keys():
