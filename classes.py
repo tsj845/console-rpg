@@ -1111,25 +1111,27 @@ class Runner ():
 
             t = text.split(" ")
             length = len(t)
+            def f (s : str) -> str:
+                return s.replace("{green}", ANSI.help_green).replace("{red}", ANSI.help_red).replace("{stop}", ANSI.reset)
             if length == 1:
-                _game_print(f"{ANSI.help_green}type help [category] for the list of all its commands{ANSI.reset}\n{help_text['help']}")
+                _game_print(f(f"{ANSI.help_green}type help [category] for the list of all its commands{ANSI.reset}\n{help_text['help']}"))
                 return
             
             elif t[1] in ("base", "inven"):
                 help_t = help_text[t[1]]
                 if length == 3:
                     if t[2] in help_t["cmds"].keys():
-                        _game_print(help_t["cmds"][t[2]])
+                        _game_print(f(help_t["cmds"][t[2]]))
                         return
                     else:
-                        _game_print(f"{ANSI.help_red}'{t[2]}' does not exist or is not implemented{ANSI.reset}")
+                        _game_print(f(f"{ANSI.help_red}'{t[2]}' does not exist or is not implemented{ANSI.reset}"))
                         return
                 else:
-                    _game_print(f"{ANSI.help_green}for more info on a command type help {t[1]} [command]{ANSI.reset}\n{help_t['list']}")
+                    _game_print(f(f"{ANSI.help_green}for more info on a command type help {t[1]} [command]{ANSI.reset}\n{help_t['list']}"))
                     return
             
             else:
-                _game_print(f"{ANSI.help_red}'{t[1]}' is not a category{ANSI.reset}")
+                _game_print(f(f"{ANSI.help_red}'{t[1]}' is not a category{ANSI.reset}"))
                 return
 
         if (self.incombat):
