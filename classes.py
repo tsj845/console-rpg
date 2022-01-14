@@ -1321,13 +1321,10 @@ class SaveLoader ():
     def _dstrut (self, l : str) -> dict:
         d = {}
         l = nqs(l[1:-1], " ")
-        # print(l)
         d["type"] = l.pop(0)
         for x in l:
             x = x.split("=")
-            print(x, "\"" in x[1], x[1] in ("true", "false"), "." in x[1])
             d[x[0]] = x[1][1:-1] if "\"" in x[1] else ({"true":True, "false":False}[x[1]] if x[1] in ("true", "false") else (float(x[1]) if "." in x[1] else int(x[1])))
-            print(d[x[0]])
         return d
     def _parseblock (self, block : List[str]) -> None:
         # block header
@@ -1405,7 +1402,6 @@ class SaveLoader ():
             for i in range(len(block)):
                 l = block.pop(0)
                 qu = self._dstrut(l)
-                print(qu)
                 q = game.get_quest(qu["qid"])
                 q["prog"] = qu["prog"]
                 q = Quest(q)
