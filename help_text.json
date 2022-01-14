@@ -6,7 +6,7 @@
                 "base commands:\nquit\ninven\nwalk [destination]\nlist [options?]\npeek [target]\ncombat commands:\nlist\nstatus\nattack [target]\nrest",
             "cmds": {
                 "quit": "quit - Exits the game. Requires a confirmation before exiting, unless in dev mode.",
-                "inven": "inven - Opens the inventory. Inventory mode has its own section of commands (see \u001b[32mhelp inven\u001b[0m)",
+                "inven": "inven - Opens the inventory. Inventory mode has its own section of commands (see {green}help inven{stop})",
                 "quests": "quests - opens the quest manager",
                 "walk": "walk [destination] - walks to [destination] where [destination] is a room name as listed by the 'list doors' command",
                 "talk": "talk [uid] - talks to npc [uid] where [uid] is the 1-based index of the npc as it appears in the 'list npcs' command",
