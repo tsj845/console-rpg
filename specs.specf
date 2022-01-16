@@ -277,6 +277,8 @@ content.amly {
                 -- can be named anything
                 -- note that flags are internally prefixed with the [cid] attribute of the dialog defining them, this means you only need to worry about name collisions within a dialog
 
+                -- also note that flag values persist between interactions with the npc
+
                 ref - [any] used as flag name
                 value - [any] used to check values
             }
@@ -351,12 +353,14 @@ content.amly {
             -- used to specify trigger type
             - string
             "lit"
+            "flag"
         }
         "con" - {
             -- used to specify condition
             - any[string, number]
             "always" - always is evaluated as the trigger succeeding ([type=lit])
             "never" - never is evaluated as the trigger succeeding ([type=lit])
+            [any] - used to match flag values ([type=flag])
         }
     }
 }

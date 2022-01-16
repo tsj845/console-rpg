@@ -82,7 +82,7 @@
     **/flags**
     *&dialog**
         **d1**
-            trigger = <TRIG etype=flag ref=dc comp=abs con=0>
+            trigger = <TRIG etype=flag ref=dc con=0>
             link = d-1
         **/d1**
         **d2**
