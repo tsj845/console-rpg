@@ -22,6 +22,8 @@ UID INDEX {
     content.amly -> syntax -> did -> 2 -> task defs - ##UID1112-0
     content.amly -> syntax -> did -> 2 -> reward defs - ##UID1112-1
     content.amly -> syntax -> did -> 3 - ##UID111-3
+    content.amly -> syntax -> did -> 4 - ##UID111-4
+    content.amly -> syntax -> did -> 5 - ##UID111-5
     content.amly -> syntax -> comments - ##UID11-2
     content.amly -> syntax -> blocks - ##UID11-3
     content.amly -> syntax -> entity defs - ##UID11-4
@@ -141,6 +143,7 @@ content.amly {
             ##UID111-0
             0 {
                 - location
+                "tid" - used for internal referencing
                 "ac" - area count (may be removed later)
                 "name" - location name
                 "rooms" - flat list of room defs
@@ -204,6 +207,24 @@ content.amly {
                     - all properties are optional
                     - property names are the slot names that their items correspond to
                     - property values are item defs
+                }
+            }
+            ##UID111-4
+            4 {
+                - npc dialog def
+                see dialog related items
+            }
+            ##UID111-5
+            5 {
+                - main map
+                layers {
+                    - list block
+                    *[layer] {
+                        - dict block
+                        - name may be anything
+                        "name" - display name
+                        *[DUN obj] - <DUN tid=[id of target area] disp=[display value] connect=[l?r?u?d?]>
+                    }
                 }
             }
         }

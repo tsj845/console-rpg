@@ -56,6 +56,7 @@ class ANSI ():
     light_blue = "\x1b[38;2;0;175;255;0m"
     dark_blue = "\x1b[38;2;50;255;0m"
     violet = "\x1b[38;2;200;100;200m"
+    fow_color = "\x1b[38;2;125;125;125m"
     default_text = "\x1b[39m"
     default_background = "\x1b[49m"
     # ANSI effects
@@ -72,11 +73,35 @@ class ANSI ():
     # characters
     empty_heart = "\u2661"
     heart = "\u2665"
+    horizontal_light = "\x1b[1m\u2500\x1b[22m"
+    vertical_light = "\x1b[1m\u2502\x1b[22m"
+    corner_rd_light = "\x1b[1m\u250c\x1b[22m"
+    corner_tr_light = "\x1b[1m\u2514\x1b[22m"
+    corner_dl_light = "\x1b[1m\u2510\x1b[22m"
+    corner_lt_light = "\x1b[1m\u2518\x1b[22m"
+    joint_lur_light = "\x1b[1m\u2534\x1b[22m"
+    joint_urd_light = "\x1b[1m\u251c\x1b[22m"
+    joint_rdl_light = "\x1b[1m\u252c\x1b[22m"
+    joint_dlt_light = "\x1b[1m\u2524\x1b[22m"
+    cross_light = "\x1b[1m\u253c\x1b[22m"
+    # movement
+    mv_up = "\x1b[1A"
+    mv_dn = "\x1b[1B"
+    mv_rt = "\x1b[1C"
+    mv_lf = "\x1b[1D"
     # functions
     def foreground (r : int, g : int, b : int) -> str:
         return f"\x1b[38;2;{r};{g};{b}m"
     def background (r : int, g : int, b : int) -> str:
         return f"\x1b[48;2;{r};{g};{b}m"
+    def __getitem__ (self, key : str) -> str:
+        _dct = {"c-tr":ANSI.corner_tr_light,"c-rd":ANSI.corner_rd_light,"c-dl":ANSI.corner_dl_light,"c-lt":ANSI.corner_lt_light,"l-hl":ANSI.horizontal_light,"l-vl":ANSI.vertical_light,"t-lur":ANSI.joint_lur_light,"t-urd":ANSI.joint_urd_light,"t-rdl":ANSI.joint_rdl_light,"t-dlu":ANSI.joint_dlt_light,"cross-l":ANSI.cross_light}
+        out = ""
+        for piece in key.split(","):
+            out += _dct[piece]
+        return out
+
+Ansi = ANSI()
 
 # ANSI = ANSI()
 
@@ -508,6 +533,70 @@ class QuestManager ():
     def add_quest (self, quest : Quest) -> None:
         self.quests.append(quest)
 
+# handles mapping displays
+class GameMap ():
+    ## GameMap
+    def __init__ (self):
+        self.intern = []
+        self.y = -1
+        self.x = -1
+        self.newline()
+    def render (self) -> None:
+        for i in range(self.y+1):
+            for l in range(1, 3):
+                # if (l == 1):
+                #     print("")
+                for j in range(len(self.intern[i])):
+                    if (l == 0):
+                        print(f"  {self.intern[i][j][1]}  ", end="")
+                    elif (l == 1):
+                        print(f"{self.intern[i][j][3]}", end="")
+                        print(f"{self.intern[i][j][0]}", end="")
+                        print(f"{self.intern[i][j][4]}", end="")
+                    elif (l == 2):
+                        print(f" {self.intern[i][j][2]}  ", end="")
+                print("")
+                # if (l == 2):
+                #     print("")
+    def add (self, code : int, unid : int = None, cons : str = None, direc : int = None) -> None:
+        l = self.intern[self.y][self.x]
+        a = False
+        # spacing
+        if (code == 0):
+            a = True
+            l[3] = "  "
+        # discovered location
+        elif (code == 1):
+            a = True
+            l[0] = f"{unid}"
+            l[1] = ANSI.vertical_light if "u" in cons else " "
+            l[2] = ANSI.vertical_light if "d" in cons else " "
+            l[3] = (ANSI.horizontal_light*2) if "l" in cons else " "
+            l[4] = ANSI.horizontal_light if "r" in cons else "  "
+        # undiscovered location
+        elif (code == 2):
+            a = True
+            l[0] = "?"
+        elif (code == 3):
+            a = True
+            l[0] = [Ansi["c-tr"], Ansi["c-rd,l-hl"], Ansi["l-hl,c-dl"], Ansi["l-hl,c-lt"], Ansi["l-hl,t-lur"], " "+Ansi["t-urd"], Ansi["l-hl,t-rdl"], Ansi["l-hl,t-dlu"], Ansi["l-hl,cross-l"]][direc]
+            pdct = {1:ANSI.vertical_light, 2:ANSI.vertical_light, 3:ANSI.horizontal_light, 4:ANSI.horizontal_light}
+            pa = [(1, 4), (4, 2), (2, 3), (3, 1), (3, 4, 1), (1, 4, 2), (3, 4, 2), (2, 3, 1), (3, 4, 1, 2)][direc]
+            # v1, v2 = pdct[p1], pdct[p2]
+            l[2] = ANSI.vertical_light if 2 in pa else " "
+            l[3] = ANSI.horizontal_light if 3 in pa else " "
+            l[4] = ANSI.horizontal_light if 4 in pa else " "
+        if (a):
+            self._incx()
+    def _incx (self) -> None:
+        self.x += 1
+        self.intern[self.y].append([" " for i in range(5)])
+    def newline (self) -> None:
+        self.y += 1
+        self.x = -1
+        self.intern.append([])
+        self._incx()
+
 # handles top level game logic
 class Runner ():
     ## Runner
@@ -521,6 +610,7 @@ class Runner ():
         self.room_data = {}
         # all the data in the game
         self.full_data = {"dungeons":[], "npcs":[], "quests":[], "enemies":[], "dialogs":[], "misc":[]}
+        self.map = {}
         # active enemies/entities
         self.enemies = []
         self.entities = []
@@ -734,7 +824,10 @@ class Runner ():
                 c += 1
     ## loading
     def load_area (self, data : dict) -> None:
-        self.area_data = data.copy()
+        self.area_data = data
+        self.area_data["visited"] = None
+        for room in self.area_data["rooms"]:
+            self._do_prob(room)
         self.load_room(self.area_data["rooms"][int(self.area_data["startroom"])] if self.area_data["startroom"].isdigit() else self._grabroom(self.area_data["startroom"]))
         self.trigger_event("load", "area", self.area_data)
     def _do_prob (self, data : dict) -> None:
@@ -748,13 +841,15 @@ class Runner ():
     def load_room (self, data : dict) -> None:
         self.room_data = data
         self.room_data["visit"] = None
-        self._do_prob(data)
         self._upltunid()
         self.trigger_event("load", "room", data)
         self._check_combat()
     def load_full (self, data : list) -> None:
         for i in range(len(data)):
             x = data[i]
+            if (int(x["did"]) == 5):
+                self.map = x
+                continue
             self.full_data[["dungeons","npcs","quests","enemies","dialogs","misc"][int(x["did"])]].append(x)
         self.load_area(self.full_data["dungeons"][0])
     def _grabroom (self, uid : str) -> dict:
@@ -772,7 +867,32 @@ class Runner ():
         return cons
     ## map display
     def _disp_map (self):
-        pass
+        def gd (tid : str) -> dict:
+            for d in self.full_data["dungeons"]:
+                if (d["tid"] == tid):
+                    return d
+        m = GameMap()
+        c = 0
+        i = 0
+        for layer in self.map["layers"]:
+            i += 1
+            locs = layer["list"]
+            for loc in locs:
+                if (loc["type"] == "EMPTY"):
+                    m.add(0)
+                elif (loc["type"] == "CORNER"):
+                    m.add(3, direc=int(loc["dir"]))
+                elif (loc["type"] == "DUN"):
+                    vin = "visited" in gd(loc["tid"])
+                    if (vin or _dev):
+                        cons = loc["connect"]
+                        m.add(1, c, cons)
+                    else:
+                        m.add(2, c)
+                    c += 1
+            if (i < len(self.map["layers"])):
+                m.newline()
+        m.render()
     ## listing
     def _list_rooms (self) -> None:
         cons = self._getroomcons(self.room_data, True)
