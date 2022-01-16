@@ -19,7 +19,7 @@
     "inven":
         {
             "list":
-                "inventory commands:\nback\nlist [target]",
+                "inventory commands:\nback\nlist [target]\nfill status\ndrop\nequip",
             "cmds": {
                 "back": "leaves the inventory",
                 "fill status": "fill status - fill status - displays the number of currently used to available slots",

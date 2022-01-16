@@ -37,8 +37,9 @@ def _game_print (*args, sep : str= " ", end : str = "\n", flush : bool = False) 
     print(*args, sep=sep, end=end, flush=flush)
 
 def _run_teach () -> None:
-    with open("helpmenu.txt") as file:
+    with open("story/story-outline.txt") as file:
         _game_print(file.read())
+    _game_print(f"\ntype {ANSI.help_green}help{ANSI.reset} for command information.")
 
 # stores ansi codes for repeated use
 class ANSI ():
@@ -414,7 +415,7 @@ class NPC ():
         t : int = int(dat["etype"])
         if (t == 0):
             self.pos += 1
-            return dat["text"]
+            return dat["text"].replace("{green}", ANSI.help_green).replace("{red}", ANSI.help_red).replace("{stop}", ANSI.reset)
         elif (t == 1):
             if (op != None):
                 if (op in dat["opts"].keys() and dat != "name"):
@@ -755,7 +756,7 @@ class Runner ():
             self.enemies.append(ene)
             self.netq.append(ene)
         self.incombat = True
-        _game_print("entering combat...")
+        _game_print(f"{ANSI.red}ENTERING COMBAT{ANSI.reset}")
         self.trigger_event("combat", "start")
     def _enemy_atk (self) -> None:
         en = self.netq.pop(0)
@@ -788,9 +789,9 @@ class Runner ():
             return
         self.player.stamina -= 1
         en = self.enemies[text]
-        _game_print(f"enemy {text} took {max(0, self.player.calc_stat('a') - en.calc_stat('d'))} damage")
+        _game_print(f"Enemy {text} took {max(0, self.player.calc_stat('a') - en.calc_stat('d'))} damage")
         if (en.takedmg(self.player.calc_stat("a"))):
-            _game_print(f"enemy {text} was defeated")
+            _game_print(f"Enemy {text} was defeated!")
             self.netq.pop(self.netq.index(en))
             ind = self.enemies.index(en)
             self.enemies.pop(ind)
@@ -806,7 +807,7 @@ class Runner ():
             if (len(self.enemies) == 0):
                 self.incombat = False
                 self.player.reset_values()
-                _game_print("exiting combat...")
+                _game_print(f"{ANSI.help_green}You won!{ANSI.reset}")
                 self.trigger_event("combat", "win")
         if (len(self.enemies) > 0):
             self._enemy_atk()
@@ -1252,35 +1253,6 @@ class Runner ():
             self.player.stamina = self.player.maxs
             self.player.mana += ceil((self.player.maxm - self.player.mana) / 2)
             _game_print("you rest to regain your strength")
-        # help menu
-        elif (text.startswith("help")):
-            with open("help_text.json") as file:
-                help_text = json.loads(file.read())
-
-            t = text.split(" ")
-            length = len(t)
-            def f (s : str) -> str:
-                return s.replace("{green}", ANSI.help_green).replace("{red}", ANSI.help_red).replace("{stop}", ANSI.reset)
-            if length == 1:
-                _game_print(f(f"{ANSI.help_green}type help [category] for the list of all its commands{ANSI.reset}\n{help_text['help']}"))
-                return
-            
-            elif t[1] in help_text.keys():
-                help_t = help_text[t[1]]
-                if length == 3:
-                    if t[2] in help_t["cmds"].keys():
-                        _game_print(f(help_t["cmds"][t[2]]))
-                        return
-                    else:
-                        _game_print(f(f"{ANSI.help_red}'{t[2]}' does not exist or is not implemented{ANSI.reset}"))
-                        return
-                else:
-                    _game_print(f(f"{ANSI.help_green}for more info on a command type help {t[1]} [command]{ANSI.reset}\n{help_t['list']}"))
-                    return
-            
-            else:
-                _game_print(f(f"{ANSI.help_red}'{t[1]}' is not a category{ANSI.reset}"))
-                return
 
         if (self.incombat):
             self._parse_combin(text)
@@ -1332,7 +1304,31 @@ class Runner ():
             _run_teach()
         while True:
             inp = input("\x1b[2K> ")
-            if (inp == "save"):
+            if (inp.startswith("help")):
+                with open("help_text.json") as file:
+                    help_text = json.loads(file.read())
+
+                t = inp.split(" ")
+                length = len(t)
+                def f (s : str) -> str:
+                    return s.replace("{green}", ANSI.help_green).replace("{red}", ANSI.help_red).replace("{stop}", ANSI.reset)
+                if length == 1:
+                    _game_print(f(f"{ANSI.help_green}type help [category] for the list of all its commands{ANSI.reset}\n{help_text['help']}"))
+                
+                elif t[1] in help_text.keys():
+                    help_t = help_text[t[1]]
+                    if length == 3:
+                        if t[2] in help_t["cmds"].keys():
+                            _game_print(f(help_t["cmds"][t[2]]))
+                        else:
+                            _game_print(f(f"{ANSI.help_red}'{t[2]}' does not exist or is not implemented{ANSI.reset}"))
+                    else:
+                        _game_print(f(f"{ANSI.help_green}for more info on a command type help {t[1]} [command]{ANSI.reset}\n{help_t['list']}"))
+                
+                else:
+                    _game_print(f(f"{ANSI.help_red}'{t[1]}' is not a category{ANSI.reset}"))
+
+            elif (inp == "save"):
                 global _nosave
                 if (_mansave):
                     _nosave = False
