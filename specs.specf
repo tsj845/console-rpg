@@ -35,8 +35,8 @@ UID INDEX {
     content.amly -> npc line specs - ##UID1-4
     content.amly -> optgroups - ##UID1-5
     content.amly -> rewards defining - ##UID1-6
-    content.amly -> rewards defining -> xp def - ##UID1-2
-    content.amly -> rewards defining -> upgrade def - ##UID1-2
+    content.amly -> rewards defining -> xp def - ##UID16-0
+    content.amly -> rewards defining -> upgrade def - ##UID16-1
     content.amly -> upgrade targets - ##UID1-7
     content.amly -> upgrade targets -> "inv-slots" - ##UID17-0
     content.amly -> triggers - ##UID1-8
@@ -269,6 +269,18 @@ content.amly {
     }
     ##UID1-2
     npc dialog {
+        did = 4
+        cid - [used to refer to dialog]
+        flags {
+            -- flat list
+            subblocks {
+                -- can be named anything
+                -- note that flags are internally prefixed with the [cid] attribute of the dialog defining them, this means you only need to worry about name collisions within a dialog
+
+                ref - [any] used as flag name
+                value - [any] used to check values
+            }
+        }
         -- use flat list named "dialog"
         subblocks {
             -- may be named anything
@@ -287,12 +299,14 @@ content.amly {
     }
     ##UID1-4
     npc line specs {
-        type - [line type (0, 1, 2, 3, 4)]
+        type - [line type (0, 1, 2, 3, 4, 5)]
         text - [display text] (for [type=(0, 1)])
         opts - [OPTGROUP] (for [type=(1)]) see "optgroups" UID1-5
         goto - [lname] (for [type=(2)])
         lname - [uid] (for [type=(3)])
         qid - [qid] (for [type=(4)])
+        ref - [ref] (for [type=(5)]), [ref] is a flag reference
+        val - [any] (for [type=(5)]), used to set the value of flag [ref]
     }
     ##UID1-5
     optgroups {
