@@ -82,10 +82,12 @@
     **/flags**
     *&dialog**
         **d1**
+        ~~ activates when dc is 0
             trigger = <TRIG etype=flag ref=dc con=0>
             link = d-1
         **/d1**
         **d2**
+        ~~ catches player when nothing else triggers
             trigger = <TRIG etype=lit con=always>
             link = d-null
         **/d2**
@@ -121,6 +123,7 @@
                 text = Don't worry though! I'm sure you'll be able to figure out the rest as you enter The Underworld.
             **/6**
             **7**
+            ~~ sets dc to 1 so that this dialog isn't entered again
                 etype = 5
                 ref = dc
                 val = 1
@@ -136,6 +139,7 @@
         **/d-1**
         *&d-null**
             **0**
+            ~~ tells the player that they need to go play the game
                 etype = 0
                 text = Go find Kyramin!
             **/0**
