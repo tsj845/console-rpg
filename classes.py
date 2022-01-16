@@ -395,12 +395,13 @@ class NPC ():
         self.linedata : List[dict] = dialog["linedata"]
         self.active : int = -1
         self.pos : int = 0
+        self.cid : str = dialog["cid"]
         self._activate()
     def _activate (self) -> None:
         for i in range(len(self.dialogs)):
             item : dict = self.dialogs[i]
             trig : dict = item["trigger"]
-            if (game.trigresult(trig)):
+            if (game.trigresult(self.cid, trig)):
                 self.active = item["link"]
                 break
     def _goto (self, g : str) -> int:
@@ -431,7 +432,10 @@ class NPC ():
             return self.next()
         elif (t == 4):
             self.pos += 1
-            return {"id":dat["qid"]}
+            return {"et":4, "id":dat["qid"]}
+        elif (t == 5):
+            self.pos += 1
+            return {"et":5, "cid":self.cid, "ref":dat["ref"], "val":dat["val"]}
     def done (self) -> bool:
         return self.pos >= len(self.linedata[self.active])
 
@@ -583,7 +587,6 @@ class GameMap ():
             l[0] = [Ansi["c-tr"], Ansi["c-rd,l-hl"], Ansi["l-hl,c-dl"], Ansi["l-hl,c-lt"], Ansi["l-hl,t-lur"], " "+Ansi["t-urd"], Ansi["l-hl,t-rdl"], Ansi["l-hl,t-dlu"], Ansi["l-hl,cross-l"]][direc]
             pdct = {1:ANSI.vertical_light, 2:ANSI.vertical_light, 3:ANSI.horizontal_light, 4:ANSI.horizontal_light}
             pa = [(1, 4), (4, 2), (2, 3), (3, 1), (3, 4, 1), (1, 4, 2), (3, 4, 2), (2, 3, 1), (3, 4, 1, 2)][direc]
-            # v1, v2 = pdct[p1], pdct[p2]
             l[2] = ANSI.vertical_light if 2 in pa else " "
             l[3] = ANSI.horizontal_light if 3 in pa else " "
             l[4] = ANSI.horizontal_light if 4 in pa else " "
@@ -627,6 +630,8 @@ class Runner ():
         # events
         self.listeners = {"any":{"null":[]}, "input":{"null":[]}, "output":{"null":[]}, "load":{"null":[],"area":[],"room":[]}, "combat":{"null":[],"start":[],"win":[],"lose":[],"attack":[],"enemy-death":[]}, "quest":{"null":[],"accept":[],"complete":[]}, "reward":{"null":[],"combat":[],"quest":[]}, "dialog":{"null":[],"start":[],"leave":[],"continue":[]}, "shop":{"null":[],"enter":[],"leave":[]}, "inven":{"null":[], "equip":[]}, "loot":{"null":[], "chest":[]}, "pl-move":{"null":[], "walk":[]}}
         self.evflags = {}
+        self.dflags = {}
+        self.reg_dflags = []
         for broad in self.listeners.keys():
             scope = self.listeners[broad]
             self.evflags[broad] = False
@@ -702,11 +707,16 @@ class Runner ():
                 ents.append(ent)
         return ents
     ## triggers
-    def trigresult (self, trig : str) -> bool:
+    def trigresult (self, cid : str, trig : str) -> bool:
         if (trig["etype"] == "lit"):
             if (trig["con"] == "always"):
                 return True
             elif (trig["con"] == "never"):
+                return False
+        elif (trig["etype"] == "flag"):
+            if (self.dflags[cid+trig["ref"]] == trig["con"]):
+                return True
+            else:
                 return False
         return False
     def check_qt_trigger (self, trig : dict):
@@ -1025,6 +1035,13 @@ class Runner ():
             _game_print(f"dropped item from slot {ind+1}")
         elif (text == "fill status"):
             _game_print(f"currently using {len(self.player.inventory.slots)} of {self.player.inventory.maxslots} slots")
+    def _dflag_init (self, data : dict) -> None:
+        if (data["cid"] in self.reg_dflags):
+            return
+        self.reg_dflags.append(data["cid"])
+        flags = data["flags"]
+        for flag in flags:
+            self.dflags[data["cid"]+flag["ref"]] = flag["value"]
     ## dialog entry
     def _start_dialog (self, text : str) -> None:
         def gn (n : dict) -> dict:
@@ -1059,6 +1076,7 @@ class Runner ():
             if (di["cid"] == npc["cid"]):
                 dia = di
                 break
+        self._dflag_init(dia)
         self.active_npc = NPC(npc, dia)
         self.indialog = True
         flavor = ("you strike a conversation with", "you start talking to", "you initiate data transfer protocols with")
@@ -1085,10 +1103,14 @@ class Runner ():
             if (type(r) == str):
                 _game_print(r)
             elif (type(r) == dict):
-                q = Quest(self.get_quest(r["id"]))
-                self.questmanager.add_quest(q)
-                _game_print(f"\x1b[2K{self.active_npc.name} has given you the quest {q.name}")
-                self.trigger_event("quest", "accept", q)
+                if (r["et"] == 4):
+                    q = Quest(self.get_quest(r["id"]))
+                    self.questmanager.add_quest(q)
+                    _game_print(f"\x1b[2K{self.active_npc.name} has given you the {ANSI.violet}quest{ANSI.default_text} \"{q.name}\"")
+                    self.trigger_event("quest", "accept", q)
+                elif (r["et"] == 5):
+                    self.dflags[r["cid"]+r["ref"]] = r["val"]
+                    self._parse_dialog("", True)
             else:
                 _game_print(f"{r[0]}: {', '.join(r[1])}")
         else:

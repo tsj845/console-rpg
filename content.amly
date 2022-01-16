@@ -73,11 +73,22 @@
 ~~ dialog 1 for npc "bob" of dungeon "test range"
     did = 4
     cid = 0
+    *&flags**
+        **0**
+        ~~ simple flag that progresses dialog
+            ref = dc
+            value = 0
+        **/0**
+    **/flags**
     *&dialog**
         **d1**
-            trigger = <TRIG etype=lit con=always>
+            trigger = <TRIG etype=flag ref=dc comp=abs con=0>
             link = d-1
         **/d1**
+        **d2**
+            trigger = <TRIG etype=lit con=always>
+            link = d-null
+        **/d2**
     **/dialog**
     **linedata**
         *&d-1**
@@ -110,10 +121,25 @@
                 text = Don't worry though! I'm sure you'll be able to figure out the rest as you enter The Underworld.
             **/6**
             **7**
+                etype = 5
+                ref = dc
+                val = 1
+            **/7**
+            **8**
                 etype = 0
                 text = Now go out and find Kyramin!
-            **/7**
+            **/8**
+            **9**
+                etype = 4
+                qid = 0
+            **/9**
         **/d-1**
+        *&d-null**
+            **0**
+                etype = 0
+                text = Go find Kyramin!
+            **/0**
+        **/d-null**
     **/linedata**
 ```
 ```
