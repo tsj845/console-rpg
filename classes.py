@@ -57,7 +57,7 @@ class ANSI ():
     health_high = "\x1b[38;2;0;200;0m"
     health_medium = "\x1b[38;2;245;245;0m"
     health_low = "\x1b[38;2;245;0;0m"
-    red = "\x1b[38;2;245;0;0m"
+    red = "\x1b[38;2;175;0;0m"
     orange = "\x1b[38;2;240;150;0m"
     yellow = "\x1b[38;2;245;245;0m"
     light_green = "\x1b[38;2;0;200;0m"
