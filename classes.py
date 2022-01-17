@@ -6,6 +6,7 @@ import readline
 import atexit
 from typing import Dict, List, Tuple, Union, Any
 import json
+import re
 
 try:
     with open("history.txt", "x"):
@@ -17,7 +18,7 @@ _dev = False
 _nosave = False
 _mansave = False
 _readinitfile = False
-_all_flush = False
+_noload = False
 
 if ("-s" in sys.argv):
     _dev = True
@@ -27,6 +28,8 @@ if ("-n" in sys.argv):
         _mansave = True
 if ("-p" in sys.argv):
     _readinitfile = True
+if ("-nl" in sys.argv):
+    _noload = True
 
 from datatables import itemmaxs, itemnamesets, itemmins, bodyslotnames, enemymins, enemymaxs, pitemmins, pitemmaxs, pitemnames
 from random import choice, randrange
@@ -109,7 +112,30 @@ class ANSI ():
 
 Ansi = ANSI()
 
-# ANSI = ANSI()
+# stores some useful regex patterns
+class Exprs ():
+    ## Exprs
+    def base_strmod (*values):
+        return re.compile(f"(?<!\\\\){'{'}({'|'.join(values)}){'}'}")
+    red = base_strmod("red")
+    orange = base_strmod("orange")
+    yellow = base_strmod("yellow")
+    green = base_strmod("green")
+    lime = base_strmod("lime")
+    blue = base_strmod("blue")
+    sky = base_strmod("sky")
+    violet = base_strmod("violet")
+    stop = base_strmod("stop")
+    __colors = [
+        [(red, ANSI.red), (orange, ANSI.orange), (yellow, ANSI.yellow), (green, ANSI.dark_green), (lime, ANSI.light_green), (blue, ANSI.dark_blue), (sky, ANSI.light_blue), (violet, ANSI.violet), (stop, ANSI.default_text)],
+        [(red, ANSI.help_red), (green, ANSI.help_green), (stop, ANSI.default_text)]
+    ]
+    def replace (string : str, *args):
+        for arg in args:
+            string = re.sub(arg[0], arg[1], string)
+        return string
+    def rep_colors (string : str, mapping : int = 0) -> str:
+        return Exprs.replace(string, *Exprs.__colors[mapping])
 
 # stores level up reward data
 class LevelRewards ():
@@ -218,8 +244,9 @@ class EnemyInventory ():
         self.slots : Dict[str, Union[None, Item]] = {"head":None, "body":None, "legs":None, "boots":None, "weapon":None, "shield":None, "charm":None}
         # if preset was given do that
         if (preset != None):
+            print(preset)
             self.slots = preset["slots"]
-            self.classi = preset["etype"]
+            self.classi = preset["type"]
             self.name = preset["name"]
         else:
             self._gen_slots()
@@ -421,7 +448,7 @@ class NPC ():
         t : int = int(dat["etype"])
         if (t == 0):
             self.pos += 1
-            return dat["text"].replace("{green}", ANSI.help_green).replace("{red}", ANSI.help_red).replace("{stop}", ANSI.reset)
+            return Exprs.rep_colors(dat["text"], 1)
         elif (t == 1):
             if (op != None):
                 if (op in dat["opts"].keys() and dat != "name"):
@@ -1345,10 +1372,15 @@ class Runner ():
         self.__initfile = False
     ## main start
     def start (self) -> None:
-        if (SaveLoader.load() and not _dev):
-            _run_teach()
-        if (_dev and _readinitfile):
-            self.__readfile()
+        global _nosave
+        try:
+            if ((not _noload and SaveLoader.load()) and not _dev):
+                _run_teach()
+            if (_dev and _readinitfile):
+                self.__readfile()
+        except:
+            _nosave = True
+            raise
         while True:
             inp = input("\x1b[2K> ")
             if (inp.startswith("help")):
@@ -1358,7 +1390,7 @@ class Runner ():
                 t = inp.split(" ")
                 length = len(t)
                 def f (s : str) -> str:
-                    return s.replace("{green}", ANSI.help_green).replace("{red}", ANSI.help_red).replace("{stop}", ANSI.reset)
+                    return Exprs.rep_colors(s)
                 if length == 1:
                     _game_print(f(f"{ANSI.help_green}type help [category] for the list of all its commands{ANSI.reset}\n{help_text['help']}"))
                 
@@ -1376,7 +1408,6 @@ class Runner ():
                     _game_print(f(f"{ANSI.help_red}'{t[1]}' is not a category{ANSI.reset}"))
 
             elif (inp == "save"):
-                global _nosave
                 if (_mansave):
                     _nosave = False
                 SaveLoader.save()
@@ -1419,7 +1450,8 @@ class SaveLoader ():
             "-- inventory" : ["capacity"],
             "-- equipped" : bodyslotnames,
             "-- location" : ["data", "room"],
-            "-- quests" : []
+            "-- quests" : [],
+            "-- dflags" : ["dflags", "regflags"]
         }
     def _fileman (self, rw : bool = False, data : str = ""):
         with open(f"{self._sf_name}.{self._sf_ext}", ("w" if rw else "r")) as f:
@@ -1486,6 +1518,12 @@ class SaveLoader ():
             lines.append(f"\t<QUEST qid={q.qid} prog={q.prog} completed=false>")
         for q in game.questmanager.completed:
             lines.append(f"\t<QUEST qid={q.qid} prog={q.prog} completed=true>")
+        lines.append("}")
+        ### build the dialog flags block
+        lines.append("{")
+        lines.append("\t-- dflags")
+        lines.append(f"\tdflags = {json.dumps(game.dflags)}")
+        lines.append(f"\tregflags = {json.dumps(game.reg_dflags)}")
         lines.append("}")
         self._fileman(True, "\x1c".join(lines).replace("\n","\\n").replace("\x1c","\n"))
     def _bfind (self, block : List[str], search : str) -> int:
@@ -1582,7 +1620,7 @@ class SaveLoader ():
             for i in range(len(block)):
                 l = block.pop(0)
                 qu = self._dstrut(l)
-                q = game.get_quest(qu["qid"])
+                q = game.get_quest(str(qu["qid"]))
                 q["prog"] = qu["prog"]
                 q = Quest(q)
                 if (qu["completed"]):
@@ -1591,6 +1629,12 @@ class SaveLoader ():
                     game.questmanager.completed.append(q)
                 else:
                     game.questmanager.add_quest(q)
+        ### parse dialog flags block
+        elif (bid == "-- dflags"):
+            l = block.pop(self._bfind(block, "dflags")).split(" ", 2)[2]
+            game.dflags = json.loads(l)
+            l = block.pop(self._bfind(block, "regflags")).split(" ", 2)[2]
+            game.reg_dflags = json.loads(l)
     ## load
     def load (self) -> None:
         lines = self._fileman()

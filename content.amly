@@ -1,4 +1,4 @@
-$$include npc-data/bob.amly
+$$include npc-data/
 
 ```
 ~~ main travel map
@@ -36,7 +36,7 @@ $$include npc-data/bob.amly
             <CON target="hall 1">
         **/entry**
         **hall 1**
-            <ENEMY etype=0 level=0 dabs=0 spawn-chance=50>
+            <ENEMY etype=0 level=0 dabs=0 spawn-chance=100>
             <CHEST level=0>
             <CON target=entry>
             <CON target="hall 2">

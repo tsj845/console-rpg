@@ -13,7 +13,8 @@
                 "rest": "rest - has the player rest to regain stamina",
                 "loot": "loot [uid] - loots chest [uid] where [uid] is the 1-based index of the chest as displayed in the 'list chests' command, this will fail if the player has no available inventory slots",
                 "peek": "peek [destination] - lists the [destination] room where [destination] is the same as the 'walk' command",
-                "status": "status - displays the player's status (health, attack/defense/mana pts, etc)"
+                "status": "status - displays the player's status (health, attack/defense/mana pts, etc)",
+                "list": "list [target?] - lists everything in the room if target is not given, otherwise will list all objects matching target in the room ex: npcs, enemies, chests, doors, rooms"
             }
         },
     "inven":
