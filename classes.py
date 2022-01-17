@@ -1096,8 +1096,7 @@ class Runner ():
             self.active_npc = None
             _game_print("leaving dialog...")
             sleep(0.25)
-            x = True
-            if (x or not self.__initfile):
+            if (not self.__initfile):
                 self._load_hist_scope()
             self.trigger_event("dialog", "leave")
             return
