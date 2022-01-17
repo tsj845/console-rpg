@@ -961,7 +961,7 @@ class Runner ():
         for i in range(len(room["list"])):
             ent = room["list"][i]
             if (ent["type"] == "ENEMY"):
-                ents.append(f"<ENEMY type={etc[ent['etype']]} level={ent['level']}>" if "type" in ent else f"<PREDEF name={ent['eid']}>")
+                ents.append(f"<ENEMY type={etc[ent['etype']]} level={ent['level']}>" if "etype" in ent else f"<PREDEF name={ent['eid']}>")
             elif (ent["type"] == "NPC"):
                 ents.append(f"<NPC name={getnpc(ent['nid'])['name']}>")
             elif (ent["type"] == "CHEST"):
