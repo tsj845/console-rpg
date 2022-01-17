@@ -244,7 +244,6 @@ class EnemyInventory ():
         self.slots : Dict[str, Union[None, Item]] = {"head":None, "body":None, "legs":None, "boots":None, "weapon":None, "shield":None, "charm":None}
         # if preset was given do that
         if (preset != None):
-            print(preset)
             self.slots = preset["slots"]
             self.classi = preset["type"]
             self.name = preset["name"]
@@ -582,21 +581,15 @@ class GameMap ():
         self.newline()
     def render (self) -> None:
         for i in range(self.y+1):
-            for l in range(1, 3):
-                # if (l == 1):
-                #     print("")
+            for l in range(2):
                 for j in range(len(self.intern[i])):
                     if (l == 0):
-                        print(f"  {self.intern[i][j][1]}  ", end="")
-                    elif (l == 1):
                         print(f"{self.intern[i][j][3]}", end="")
                         print(f"{self.intern[i][j][0]}", end="")
                         print(f"{self.intern[i][j][4]}", end="")
-                    elif (l == 2):
+                    elif (l == 1):
                         print(f" {self.intern[i][j][2]}  ", end="")
                 print("")
-                # if (l == 2):
-                #     print("")
     def add (self, code : int, unid : int = None, cons : str = None, direc : int = None) -> None:
         l = self.intern[self.y][self.x]
         a = False
@@ -1353,7 +1346,6 @@ class Runner ():
                     print("something went wrong")
     ## history
     def _save_hist_scope (self, clear : bool = True) -> None:
-        # print(os.access("history.txt", os.R_OK))
         readline.write_history_file("history.txt")
         if (clear):
             readline.clear_history()
@@ -1654,7 +1646,6 @@ class SaveLoader ():
                 continue
             cblock.append(line.lstrip())
         for block in blocks:
-            # print(block, end="\n\n")
             self._parseblock(block)
         return False
 
