@@ -1,5 +1,6 @@
 _dev = True
 
+import os
 import sys
 import readline
 import atexit
@@ -15,6 +16,8 @@ except FileExistsError:
 _dev = False
 _nosave = False
 _mansave = False
+_readinitfile = False
+_all_flush = False
 
 if ("-s" in sys.argv):
     _dev = True
@@ -22,6 +25,8 @@ if ("-n" in sys.argv):
     _nosave = True
     if ("-ms" in sys.argv):
         _mansave = True
+if ("-p" in sys.argv):
+    _readinitfile = True
 
 from datatables import itemmaxs, itemnamesets, itemmins, bodyslotnames, enemymins, enemymaxs, pitemmins, pitemmaxs, pitemnames
 from random import choice, randrange
@@ -645,6 +650,7 @@ class Runner ():
         }
         self.listen(self.questmanager.event)
         self._queue : List[Tuple[str, list]] = []
+        self.__initfile = False
     ## reward
     def reward (self, reward : dict, indent : int = 0) -> None:
         global globalindent
@@ -1090,7 +1096,9 @@ class Runner ():
             self.active_npc = None
             _game_print("leaving dialog...")
             sleep(0.25)
-            self._load_hist_scope()
+            x = True
+            if (x or not self.__initfile):
+                self._load_hist_scope()
             self.trigger_event("dialog", "leave")
             return
         if (text == ""):
@@ -1101,7 +1109,7 @@ class Runner ():
                 self._parse_dialog("leave")
                 return
             if (type(r) == str):
-                _game_print(r)
+                _game_print(r, end=("\n\n" if self.__initfile else "\n"))
             elif (type(r) == dict):
                 if (r["et"] == 4):
                     q = Quest(self.get_quest(r["id"]))
@@ -1315,15 +1323,29 @@ class Runner ():
                     print("something went wrong")
     ## history
     def _save_hist_scope (self, clear : bool = True) -> None:
+        # print(os.access("history.txt", os.R_OK))
         readline.write_history_file("history.txt")
         if (clear):
             readline.clear_history()
     def _load_hist_scope (self) -> None:
         readline.read_history_file("history.txt")
+    def __readfile (self) -> None:
+        lines = None
+        with open("insts.txt", "r") as f:
+            lines = f.read().split("\n")
+        if (lines == None):
+            print("attempted to read insts.txt for instructions, could not find file")
+            return
+        self.__initfile = True
+        for line in lines:
+            self.parse_input(line)
+        self.__initfile = False
     ## main start
     def start (self) -> None:
         if (SaveLoader.load() and not _dev):
             _run_teach()
+        if (_dev and _readinitfile):
+            self.__readfile()
         while True:
             inp = input("\x1b[2K> ")
             if (inp.startswith("help")):

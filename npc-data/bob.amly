@@ -1,0 +1,84 @@
+```
+~~ npc "bob" of dungeon "test range"
+    did = 1
+    cid = 0
+    nid = 0
+    name = bob
+```
+```
+~~ dialog 1 for npc "bob" of dungeon "test range"
+    did = 4
+    cid = 0
+    *&flags**
+        **0**
+        ~~ simple flag that progresses dialog
+            ref = dc
+            value = 0
+        **/0**
+    **/flags**
+    *&dialog**
+        **d1**
+        ~~ activates when dc is 0
+            trigger = <TRIG etype=flag ref=dc con=0>
+            link = d-1
+        **/d1**
+        **d2**
+        ~~ catches player when nothing else triggers
+            trigger = <TRIG etype=lit con=always>
+            link = d-null
+        **/d2**
+    **/dialog**
+    **linedata**
+        *&d-1**
+            **0**
+                etype = 0
+                text = Hello there!
+            **/0**
+            **1**
+                etype = 0
+                text = You're the one the elders sent on a quest, aren't you?
+            **/1**
+            **2**
+                etype = 0
+                text = You better get to that dungeon quick! Use {green}list doors{stop} to find the halls you can walk through.
+            **/2**
+            **3**
+                etype = 0
+                text = Be careful though, you might come across some... rather unfriendly people.
+            **/3**
+            **4**
+                etype = 0
+                text = If you're ever in a fight, use {green}attack [target]{stop} to give your opponent a good smack in the face!
+            **/4**
+            **5**
+                etype = 0
+                text = That's about all I can help you with.
+            **/5**
+            **6**
+                etype = 0
+                text = Don't worry though! I'm sure you'll be able to figure out the rest as you enter The Underworld.
+            **/6**
+            **7**
+            ~~ sets dc to 1 so that this dialog isn't entered again
+                etype = 5
+                ref = dc
+                val = 1
+            **/7**
+            **8**
+                etype = 0
+                text = Now go out and find Kyramin!
+            **/8**
+            **9**
+                etype = 4
+                qid = 0
+            **/9**
+        **/d-1**
+        *&d-null**
+            **0**
+            ~~ tells the player that they need to go play the game
+                etype = 0
+                text = Go find Kyramin!
+            **/0**
+        **/d-null**
+    **/linedata**
+```

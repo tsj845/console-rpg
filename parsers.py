@@ -1,5 +1,6 @@
 import re
 import sys
+import os
 
 _dev = False
 
@@ -13,6 +14,33 @@ blockre = re.compile("\*\*[\w\s/-]*\*\*\n?|\*&[\w\s-]*\*\*\n?")
 lines = []
 with open("content.amly" if not _dev else "pt.amly") as f:
     lines = f.read().split("```")
+
+def _process_includes (lines : list) -> list:
+    def getincludes (lin : str):
+        lst = []
+        with os.scandir(lin[:-1]) as dirs:
+            for e in dirs:
+                if (e.is_file() and e.name.endswith(".amly")):
+                    lst.append(e.path)
+        return lst
+    def getinclude (lin : str) -> list:
+        lst = []
+        with open(lin, "r") as f:
+            lst = f.read().split("```")
+        _process_includes(lst)
+        return lst
+    l = lines.pop(0)
+    lins = l.split("\n")
+    for lin in lins:
+        if (lin.startswith("$$include")):
+            lin : str = lin.split(" ", 1)[1]
+            if (lin.endswith("/")):
+                lins.extend(getincludes(lin))
+            else:
+                lines.extend(getinclude(lin))
+
+if ("$$include" in lines[0]):
+    _process_includes(lines)
 
 # final data list
 datums = []
