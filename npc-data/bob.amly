@@ -22,6 +22,11 @@
             trigger = <TRIG etype=flag ref=dc con=0>
             link = d-1
         **/d1**
+        **d3**
+        ~~ when player has completed main quest
+            trigger = <TRIG etype=quest qid=0 con=complete>
+            link = d-qdone
+        **/d3**
         **d2**
         ~~ catches player when nothing else triggers
             trigger = <TRIG etype=lit con=always>
@@ -73,6 +78,13 @@
                 qid = 0
             **/9**
         **/d-1**
+        *&d-qdone**
+            **0**
+            ~~ noice
+                etype = 0
+                text = Ghank you for playing!
+            **/0**
+        **/d-qdone**
         *&d-null**
             **0**
             ~~ tells the player that they need to go play the game

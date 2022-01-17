@@ -526,6 +526,7 @@ class QuestManager ():
         self.quests : List[Quest] = []
         self.torem : List[str] = []
         self.completed : List[Quest] = []
+        self.cqids : List[str] = []
     def remdone (self) -> None:
         ol = len(self.quests)
         for i in range(ol):
@@ -533,6 +534,7 @@ class QuestManager ():
             quest : Quest = self.quests[i]
             if (quest.qid in self.torem):
                 quest.complete()
+                self.cqids.append(quest.qid)
                 self.completed.append(self.quests.pop(i))
         self.torem.clear()
     def event (self, kind : str, specific : str, *data) -> None:
@@ -724,6 +726,8 @@ class Runner ():
                 return True
             else:
                 return False
+        elif (trig["etype"] == "quest"):
+            return trig["qid"] in self.questmanager.cqids
         return False
     def check_qt_trigger (self, trig : dict):
         if (trig["type"] == "EVENT"):
