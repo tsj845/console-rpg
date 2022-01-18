@@ -654,6 +654,8 @@ class Runner ():
         self.ininvent = False
         self.inshopin = False
         self.inquestm = False
+        # dev items
+        self._dev_items = {"hod":"4 hammer-of-dawn 0 9999999999999 0 9999999999999 0 100 0 0 0"}
         # events
         self.listeners = {"any":{"null":[]}, "input":{"null":[]}, "output":{"null":[]}, "load":{"null":[],"area":[],"room":[]}, "combat":{"null":[],"start":[],"win":[],"lose":[],"attack":[],"enemy-death":[]}, "quest":{"null":[],"accept":[],"complete":[]}, "reward":{"null":[],"combat":[],"quest":[]}, "dialog":{"null":[],"start":[],"leave":[],"continue":[]}, "shop":{"null":[],"enter":[],"leave":[]}, "inven":{"null":[], "equip":[]}, "loot":{"null":[], "chest":[]}, "pl-move":{"null":[], "walk":[]}}
         self.evflags = {}
@@ -1151,6 +1153,8 @@ class Runner ():
             self._parse_dialog("leave")
     ## FGI
     def _forcegenitem (self, text : str) -> None:
+        if (text in self._dev_items.keys()):
+            text = self._dev_items[text]
         text = text.split(" ")
         slotid = int(text[0])
         name = text[1].replace("-", " ")
@@ -1194,10 +1198,10 @@ class Runner ():
         elif (text.startswith("list")):
             if (len(text) > 4):
                 if (text == "list complete"):
-                    if (len(self.questmanager.quests) == 0):
+                    if (len(self.questmanager.completed) == 0):
                         _game_print("you have no completed quests")
                         return
-                    for q in self.questmanager.quests:
+                    for q in self.questmanager.completed:
                         _game_print(f"<QUEST progress={q.prog} name={q.name}>")
                 return
             if (len(self.questmanager.quests) == 0):
