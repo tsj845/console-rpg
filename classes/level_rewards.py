@@ -1,4 +1,4 @@
-from numpy import floor
+from math import floor
 
 class LevelRewards ():
     ## LevelRewards

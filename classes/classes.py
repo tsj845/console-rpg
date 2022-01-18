@@ -42,7 +42,7 @@ if ("-nl" in sys.argv):
 
 from helpers.datatables import itemmaxs, itemnamesets, itemmins, bodyslotnames, enemymins, enemymaxs, pitemmins, pitemmaxs, pitemnames
 from random import choice, randrange
-from numpy import ceil, floor
+from math import ceil, floor
 from time import sleep
 from helpers.parsers import nqs
 import json
