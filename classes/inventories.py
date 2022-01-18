@@ -1,5 +1,7 @@
 from typing import Dict, List, Tuple, Union, Any
-from classes. items import *
+from classes.items import *
+
+item_manager = ItemManager()
 
 class EnemyInventory ():
     ## EnemyInventory
@@ -17,7 +19,7 @@ class EnemyInventory ():
             self._gen_slots()
     def _gen_slots (self) -> None:
         # gets a random name and item set
-        self.name, items = ItemManager.get_rand_itemset(self.level, self.classi)
+        self.name, items = item_manager.get_rand_itemset(self.level, self.classi)
         # sets slots
         self.slots = {"head":items[0], "body":items[1], "legs":items[2], "boots":items[3], "weapon":items[4], "shield":items[5], "charm":items[6]}
     def setstat (self, statid : str, value : int) -> None:
