@@ -546,7 +546,7 @@ class Runner ():
                 dia = di
                 break
         self._dflag_init(dia)
-        self.active_npc = NPC(npc, dia)
+        self.active_npc = NPC(npc, dia, self)
         self.indialog = True
         flavor = ("you strike a conversation with", "you start talking to", "you initiate data transfer protocols with")
         _game_print(f"{choice(flavor)} {self.active_npc.name}")
@@ -574,7 +574,7 @@ class Runner ():
                 _game_print(r, end=("\n\n" if self.__initfile else "\n"))
             elif (type(r) == dict):
                 if (r["et"] == 4):
-                    q = Quest(self.get_quest(r["id"]))
+                    q = Quest(self.get_quest(r["id"]), self)
                     self.questmanager.add_quest(q)
                     _game_print(f"\x1b[2K{self.active_npc.name} has given you the {ANSI.violet}quest{ANSI.default_text} \"{q.name}\"")
                     self.trigger_event("quest", "accept", q)
@@ -1055,7 +1055,7 @@ class SaveLoader ():
                 qu = self._dstrut(l)
                 q = game.get_quest(str(qu["qid"]))
                 q["prog"] = qu["prog"]
-                q = Quest(q)
+                q = Quest(q, self)
                 if (qu["completed"]):
                     q.done = True
                     q.rag = True

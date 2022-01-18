@@ -1,5 +1,5 @@
 from typing import Dict, List, Tuple, Union, Any
-from classes. items import *
+from classes.items import *
 
 class EnemyInventory ():
     ## EnemyInventory

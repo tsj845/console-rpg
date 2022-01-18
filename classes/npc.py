@@ -1,23 +1,22 @@
 from typing import  Union, List, Tuple
 from classes.ansi import ANSI
-from classes.gamemap import GameMap
 from classes.exprs import Exprs
 
 class NPC ():
     ## NPC
-    def __init__ (self, npc : dict, dialog : dict) -> None:
+    def __init__ (self, npc : dict, dialog : dict, game) -> None:
         self.name : str = npc["name"]
         self.dialogs : List[dict] = dialog["dialog"]
         self.linedata : List[dict] = dialog["linedata"]
         self.active : int = -1
         self.pos : int = 0
         self.cid : str = dialog["cid"]
-        self._activate()
-    def _activate (self) -> None:
+        self._activate(game)
+    def _activate (self, game) -> None:
         for i in range(len(self.dialogs)):
             item : dict = self.dialogs[i]
             trig : dict = item["trigger"]
-            if (GameMap.trigresult(self.cid, trig)):
+            if (game.trigresult(self.cid, trig)):
                 self.active = item["link"]
                 break
     def _goto (self, g : str) -> int:

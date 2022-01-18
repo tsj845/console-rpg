@@ -1,10 +1,9 @@
 from typing import List
-from classes.gamemap import GameMap
-game = GameMap()
 
 class Task ():
     ## Task
-    def __init__ (self, data : dict) -> None:
+    def __init__ (self, data : dict, game) -> None:
+        self.game = game
         self.text : str = data["text"]
         self.instructions : str = data["instructions"]
         self.comptext : str = data["comptext"]
@@ -21,14 +20,14 @@ class Task ():
         for t in self.triggers:
             if (t["type"] == "COUNT"):
                 if ("o" in t):
-                    t["c"] = game.counts[t["a"]] + int(t["o"])
+                    t["c"] = self.game.counts[t["a"]] + int(t["o"])
                 else:
                     t["c"] = int(t["c"])
     # runs checks to see if the task is complete
     def check (self) -> bool:
         state : int = {"all":0,"any":1}[self.trigger["req"]]
         for trigger in self.triggers:
-            r : bool = game.check_qt_trigger(trigger)
+            r : bool = self.game.check_qt_trigger(trigger)
             if (state == 0 and not r):
                 return False
             elif (state == 1 and r):
@@ -40,17 +39,18 @@ class Task ():
     def event (self, kind : str, specific : str, *data) -> bool:
         return self.check()
     def complete (self) -> None:
-        game.queue("task", (self.text, self.rewards, self.comptext))
+        self.game.queue("task", (self.text, self.rewards, self.comptext))
 
 # handles quest stuff
 class Quest ():
     ## Quest
-    def __init__ (self, qo : dict):
+    def __init__ (self, qo : dict, game):
+        self.game = game
         self.qid : str = qo["qid"]
         self.name : str = qo["name"]
         self.comptext : str = qo["comptext"]
         self.retreq : bool = qo["return"] == "yes"
-        self.tasks : List[Task] = [Task(qo["tasks"][i]) for i in range(len(qo["tasks"]))]
+        self.tasks : List[Task] = [Task(qo["tasks"][i], self.game) for i in range(len(qo["tasks"]))]
         self.rewards : List[dict] = qo["rewards"]
         self.prog : int = qo["prog"]
         self.tasks[self.prog].activate()
@@ -74,7 +74,7 @@ class Quest ():
         if (not self.done or self.rag):
             return
         self.rag = True
-        game.queue("quest", (self.name, self.rewards, self.comptext))
+        self.game.queue("quest", (self.name, self.rewards, self.comptext))
 
 # manages quests
 class QuestManager ():
