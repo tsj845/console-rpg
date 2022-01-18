@@ -1,0 +1,49 @@
+```
+~~ tutorial quest
+    did = 2
+    qid = 0
+    name = tutorial
+    *&tasks**
+        **0**
+            trigger = <EVENT kind=pl-move specific=walk>
+            text = first steps
+            instructions = walk to the next room
+            comptext = good to know you have legs
+            *&rewards**
+                <XP amount=1>
+            **/rewards**
+        **/0**
+        **1**
+            trigger = <EVENT kind=combat specific=win>
+            text = combat
+            instructions = win a fight
+            comptext = a winner is you
+            *&rewards**
+                <XP amount=1>
+            **/rewards**
+        **/1**
+        **2**
+            trigger = <EVENT kind=loot specific=chest>
+            text = loot the room
+            instructions = this one is kinda obvious but for smooth brians, loot a chest
+            comptext = was it shiny?
+            *&rewards**
+                <XP amount=1>
+            **/rewards**
+        **/2**
+        **3**
+            trigger = <EVENT kind=inven specific=equip>
+            text = suit up
+            instructions = equip something
+            comptext = feeling safer already
+            *&rewards**
+                <XP amount=1>
+            **/rewards**
+        **/3**
+    **/tasks**
+    comptext = you should check out the fight quest now
+    return = yes
+    *&rewards**
+        <XP amount=1>
+    **/rewards**
+```

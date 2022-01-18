@@ -64,9 +64,6 @@ def _run_teach () -> None:
         _game_print(file.read())
     _game_print(f"\ntype {ANSI.help_green}help{ANSI.reset} for command information.")
 
-Ansi = ANSI()
-ItemManager = ItemManager()
-
 # handles top level game logic
 class Runner ():
     ## Runner
@@ -565,7 +562,7 @@ class Runner ():
             return
         if (text == ""):
             if (not k):
-                print("\x1b[2K\x1b[1A\x1b[2K", end="")
+                _game_print("\x1b[2K\x1b[1A\x1b[2K", end="")
             r = self.active_npc.next()
             if (r == False):
                 self._parse_dialog("leave")
@@ -633,10 +630,10 @@ class Runner ():
         elif (text.startswith("list")):
             if (len(text) > 4):
                 if (text == "list complete"):
-                    if (len(self.questmanager.quests) == 0):
+                    if (len(self.questmanager.completed) == 0):
                         _game_print("you have no completed quests")
                         return
-                    for q in self.questmanager.quests:
+                    for q in self.questmanager.completed:
                         _game_print(f"<QUEST progress={q.prog} name={q.name}>")
                 return
             if (len(self.questmanager.quests) == 0):

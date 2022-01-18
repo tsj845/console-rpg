@@ -1,0 +1,17 @@
+```
+~~ tutorial boss
+    did = 3
+    eid = tuten
+    name = tutorial boss
+    level = 0
+    etype = 0
+    baseh = 5
+    based = 0
+    basea = 1
+    bases = 2
+    basem = 0
+    **items**
+        weapon = <ITEM level=0 xpr=0 xpm=0 hmod=1 dmod=1 amod=2 smod=0 mmod=0 name="wubba dub dub">
+        shield = <ITEM level=0 xpr=0 xpm=0 hmod=0 dmod=2 amod=0 smod=0 mmod=0 name="bubba bub blocked">
+    **/items**
+```

@@ -1,0 +1,14 @@
+```
+~~ dungeon for map testing
+    did = 0
+    tid = 1
+    name = d test
+    *&rooms**
+        **blank**
+            <ENEMY etype=0 level=0 spawn-chance=0>
+        **/blank**
+    **/rooms**
+    *&cons**
+    **/cons**
+    startroom = blank
+```

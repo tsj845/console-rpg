@@ -1,5 +1,4 @@
 from typing import  Union, List, Tuple
-from classes.ansi import ANSI
 from classes.exprs import Exprs
 
 class NPC ():

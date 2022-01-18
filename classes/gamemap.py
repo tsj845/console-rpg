@@ -42,7 +42,6 @@ class GameMap ():
         elif (code == 3):
             a = True
             l[0] = [Ansi["c-tr"], Ansi["c-rd,l-hl"], Ansi["l-hl,c-dl"], Ansi["l-hl,c-lt"], Ansi["l-hl,t-lur"], " "+Ansi["t-urd"], Ansi["l-hl,t-rdl"], Ansi["l-hl,t-dlu"], Ansi["l-hl,cross-l"]][direc]
-            pdct = {1:ANSI.vertical_light, 2:ANSI.vertical_light, 3:ANSI.horizontal_light, 4:ANSI.horizontal_light}
             pa = [(1, 4), (4, 2), (2, 3), (3, 1), (3, 4, 1), (1, 4, 2), (3, 4, 2), (2, 3, 1), (3, 4, 1, 2)][direc]
             l[2] = ANSI.vertical_light if 2 in pa else " "
             l[3] = ANSI.horizontal_light if 3 in pa else " "

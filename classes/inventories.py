@@ -1,4 +1,4 @@
-from typing import Dict, List, Tuple, Union, Any
+from typing import Dict, List, Union
 from classes.items import *
 
 class EnemyInventory ():

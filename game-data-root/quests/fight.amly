@@ -1,0 +1,32 @@
+```
+~~ combat quest 1
+    did = 2
+    qid = 1
+    name = FIGHT!
+    *&tasks**
+        **0**
+            ~~ tells quest that all triggers must be met to complete this task
+            trigger = <COMPOUND req=all>
+            ~~ multiple conditions trigger
+            *&triggers**
+                <COUNT a=kills c=2>
+                <COUNT a=b-won c=2>
+            **/triggers**
+            text = win
+            instructions = this quest has two parts: kill two enemies and win two fights
+            comptext = that was easy
+        **/0**
+        **1**
+            ~~ sets an offset, meaning that the player must complete two more fights that they currently have completed
+            trigger = <COUNT a=b-won o=2>
+            text = time for a challenge
+            instructions = win two more fights
+            comptext = all done
+        **/1**
+    **/tasks**
+    comptext = have these, you'll need them
+    return = yes
+    *&rewards**
+        <UPG target=inv-slots amount=5>
+    **/rewards**
+```

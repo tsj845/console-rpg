@@ -1,5 +1,5 @@
 from typing import Dict, List, Tuple, Union, Any
-from helpers.datatables import itemmaxs, itemnamesets, itemmins, bodyslotnames, enemymins, enemymaxs, pitemmins, pitemmaxs, pitemnames
+from helpers.datatables import itemmaxs, itemnamesets, itemmins, bodyslotnames, pitemmins, pitemmaxs, pitemnames
 from random import choice, randrange
 from math import floor
 from classes.level_rewards import LevelRewards
@@ -72,3 +72,5 @@ class ItemManager ():
         stats = {"h":randrange(mins["h"],maxs["h"]+1),"a":randrange(mins["a"],maxs["a"]+1),"m":randrange(mins["m"],maxs["m"]+1),"s":randrange(mins["s"],maxs["s"]+1),"d":randrange(mins["d"],maxs["d"]+1)}
         name : str = choice(pitemnames[level][slot])
         return Item(slot, name, stats, levelmod=1)
+
+ItemManager = ItemManager()

@@ -57,3 +57,5 @@ class ANSI ():
         for piece in key.split(","):
             out += _dct[piece]
         return out
+
+Ansi = ANSI()

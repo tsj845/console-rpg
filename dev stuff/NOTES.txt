@@ -1,0 +1,4 @@
+-- the LevelRewards class is super broken and needs an overhaul / rebalancing
+
+-- player resting probably also needs to be overhaulec
+-- in the future may want to remove stamina as a naturally occuring item stat for random items

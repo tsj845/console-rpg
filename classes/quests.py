@@ -53,6 +53,10 @@ class Quest ():
         self.tasks : List[Task] = [Task(qo["tasks"][i], self.game) for i in range(len(qo["tasks"]))]
         self.rewards : List[dict] = qo["rewards"]
         self.prog : int = qo["prog"]
+        if (self.prog >= len(self.tasks)):
+            self.done = True
+            self.rag = True
+            return
         self.tasks[self.prog].activate()
         self.done : bool = False
         self.rag : bool = False

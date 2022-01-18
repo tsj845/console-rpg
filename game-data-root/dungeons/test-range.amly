@@ -1,0 +1,26 @@
+```
+~~ dungeon "test range"
+    did = 0
+    tid = 0
+    ac = 1
+    name = test range
+    *&rooms**
+        **entry**
+            <NPC nid=0>
+            <CON target="hall 1">
+        **/entry**
+        **hall 1**
+            <ENEMY etype=0 level=0 dabs=0 spawn-chance=100>
+            <CHEST level=0>
+            <CON target=entry>
+            <CON target="hall 2">
+        **/hall 1**
+        **hall 2**
+            <ENEMY eid=tuten>
+            <CON target="hall 1">
+        **/hall 2**
+    **/rooms**
+    *&cons**
+    **/cons**
+    startroom = entry
+```
