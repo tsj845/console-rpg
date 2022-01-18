@@ -790,7 +790,7 @@ class Runner ():
             readline.clear_history()
     def _load_hist_scope (self) -> None:
         readline.read_history_file("history.txt")
-    def __readfile (self) -> None:
+    def _readfile (self) -> None:
         lines = None
         with open("insts.txt", "r") as f:
             lines = f.read().split("\n")
@@ -808,7 +808,7 @@ class Runner ():
             if ((not _noload and SaveLoader.load()) and not _dev):
                 _run_teach()
             if (_dev and _readinitfile):
-                self.__readfile()
+                self._readfile()
         except:
             _nosave = True
             raise
