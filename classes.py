@@ -7,6 +7,7 @@ import atexit
 from typing import Dict, List, Tuple, Union, Any
 import json
 import re
+from encoder import encoder
 
 try:
     with open("history.txt", "x"):
@@ -19,6 +20,7 @@ _nosave = False
 _mansave = False
 _readinitfile = False
 _noload = False
+_use_encode = False
 
 if ("-s" in sys.argv):
     _dev = True
@@ -30,10 +32,12 @@ if ("-p" in sys.argv):
     _readinitfile = True
 if ("-nl" in sys.argv):
     _noload = True
+if ("-en" in sys.argv):
+    _use_encode = True
 
 from datatables import itemmaxs, itemnamesets, itemmins, bodyslotnames, enemymins, enemymaxs, pitemmins, pitemmaxs, pitemnames
 from random import choice, randrange
-from numpy import ceil, floor
+from math import ceil, floor
 from time import sleep
 from parsers import nqs
 import json
@@ -522,6 +526,10 @@ class Quest ():
         self.tasks : List[Task] = [Task(qo["tasks"][i]) for i in range(len(qo["tasks"]))]
         self.rewards : List[dict] = qo["rewards"]
         self.prog : int = qo["prog"]
+        if (self.prog >= len(self.tasks)):
+            self.done = True
+            self.rag = True
+            return
         self.tasks[self.prog].activate()
         self.done : bool = False
         self.rag : bool = False
@@ -1452,11 +1460,11 @@ class SaveLoader ():
     def _fileman (self, rw : bool = False, data : str = ""):
         with open(f"{self._sf_name}.{self._sf_ext}", ("w" if rw else "r")) as f:
             if (rw):
-                f.write(data)
+                f.write(encoder.encode(0xadfc, 1, data) if _use_encode else data)
             else:
                 lines = f.read()
         if (not rw):
-            return lines
+            return encoder.decode(lines) if _use_encode else lines
     ## save
     def save (self) -> None:
         if (_nosave):
