@@ -21,7 +21,7 @@ def _process_includes (lines : list) -> list:
         with os.scandir(lin[:-1]) as dirs:
             for e in dirs:
                 if (e.is_file() and e.name.endswith(".amly")):
-                    lst.append("$$inclue "+e.path)
+                    lst.append("$$include "+e.path)
         return lst
     def getinclude (lin : str) -> list:
         lst = []
