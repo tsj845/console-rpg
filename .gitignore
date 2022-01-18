@@ -3,3 +3,4 @@
 *.pyc
 history.txt
 insts.txt
+.DS_Store
