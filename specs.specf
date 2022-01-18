@@ -53,6 +53,8 @@ game running {
 
     if "-ms" is passed with "-n" manual saving will be enabled
 
+    if "-en" is passed to the script the save file will not use encoding
+
     ##UID0-0
     dev mode {
         allows use of dev commands
