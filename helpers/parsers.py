@@ -44,7 +44,6 @@ def _process_includes (lines : list) -> list:
 
 if ("$$include" in lines[0]):
     _process_includes(lines)
-    # print("\x1b[38;2;0;200;0m", lines, "\x1b[0m", sep="")
 
 # final data list
 datums = []
@@ -140,9 +139,6 @@ def parse (rawline : str):
         if (not len(line)):
             continue
         line = line.split(" = ")
-        # if (line[0] in ("startroom",)):
-        #     specials.append(line)
-        #     continue
         data[line[0]] = line[1]
     blockdepth = 0
     # path to current block
@@ -216,10 +212,6 @@ def parse (rawline : str):
                 cb.append(datstruct(line))
             else:
                 cb["list"].append(datstruct(line))
-    # for i in range(len(specials)):
-    #     line = specials[i]
-    #     if (line[0] == "startroom"):
-    #         data["startroom"] = _ret(data["rooms"], line[1])
     if (data["did"] == "2"):
         data["prog"] = 0
     # adds the data to the final list
@@ -229,10 +221,9 @@ def parse (rawline : str):
 for i in range(lines.count("\n")):
     lines.pop(lines.index("\n"))
 
-# print("\x1b[38;2;0;150;255m", lines, "\x1b[0m", sep="")
 # parses data
 for lineind in range(len(lines)):
     parse(lines[lineind])
 
-if (True or _dev):
+if (_dev):
     print(*datums, sep="\n\n")
