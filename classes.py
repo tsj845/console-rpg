@@ -20,7 +20,7 @@ _nosave = False
 _mansave = False
 _readinitfile = False
 _noload = False
-_use_encode = False
+_use_encode = True
 
 if ("-s" in sys.argv):
     _dev = True
@@ -33,7 +33,7 @@ if ("-p" in sys.argv):
 if ("-nl" in sys.argv):
     _noload = True
 if ("-en" in sys.argv):
-    _use_encode = True
+    _use_encode = False
 
 from datatables import itemmaxs, itemnamesets, itemmins, bodyslotnames, enemymins, enemymaxs, pitemmins, pitemmaxs, pitemnames
 from random import choice, randrange
