@@ -21,7 +21,7 @@ def _process_includes (lines : list) -> list:
         with os.scandir(lin[:-1]) as dirs:
             for e in dirs:
                 if (e.is_file() and e.name.endswith(".amly")):
-                    lst.append(e.path)
+                    lst.append("$$inclue "+e.path)
         return lst
     def getinclude (lin : str) -> list:
         lst = []
@@ -31,16 +31,20 @@ def _process_includes (lines : list) -> list:
         return lst
     l = lines.pop(0)
     lins = l.split("\n")
-    for lin in lins:
+    i = 0
+    while i < len(lins):
+        lin = lins[i]
         if (lin.startswith("$$include")):
             lin : str = lin.split(" ", 1)[1]
             if (lin.endswith("/")):
                 lins.extend(getincludes(lin))
             else:
                 lines.extend(getinclude(lin))
+        i += 1
 
 if ("$$include" in lines[0]):
     _process_includes(lines)
+    # print("\x1b[38;2;0;200;0m", lines, "\x1b[0m", sep="")
 
 # final data list
 datums = []
@@ -218,11 +222,6 @@ def parse (rawline : str):
     #         data["startroom"] = _ret(data["rooms"], line[1])
     if (data["did"] == "2"):
         data["prog"] = 0
-    # print("{")
-    # for key in data.keys():
-        # print(f"{key}: {data[key]}")
-    # print("}")
-    # print(data)
     # adds the data to the final list
     datums.append(data)
 
@@ -230,9 +229,10 @@ def parse (rawline : str):
 for i in range(lines.count("\n")):
     lines.pop(lines.index("\n"))
 
+# print("\x1b[38;2;0;150;255m", lines, "\x1b[0m", sep="")
 # parses data
 for lineind in range(len(lines)):
     parse(lines[lineind])
 
-if (_dev):
-    print(datums[0])
+if (True or _dev):
+    print(*datums, sep="\n\n")

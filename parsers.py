@@ -44,6 +44,7 @@ def _process_includes (lines : list) -> list:
 
 if ("$$include" in lines[0]):
     _process_includes(lines)
+    print(lines)
 
 # final data list
 datums = []
@@ -237,5 +238,5 @@ for i in range(lines.count("\n")):
 for lineind in range(len(lines)):
     parse(lines[lineind])
 
-if (_dev):
+if (True or _dev):
     print(datums[0])

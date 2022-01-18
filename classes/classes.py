@@ -15,6 +15,7 @@ from classes.enemy import Enemy
 from classes.npc import NPC
 from classes.gamemap import GameMap
 from classes.exprs import Exprs
+from helpers.encoder import encoder
 
 try:
     with open("history.txt", "x"):
@@ -27,7 +28,8 @@ _nosave = False
 _mansave = False
 _readinitfile = False
 _noload = False
-
+_use_encode = True
+_no_start = False
 
 if ("-s" in sys.argv):
     _dev = True
@@ -39,6 +41,10 @@ if ("-p" in sys.argv):
     _readinitfile = True
 if ("-nl" in sys.argv):
     _noload = True
+if ("-en" in sys.argv):
+    _use_encode = False
+if ("-ex" in sys.argv):
+    _no_start = True
 
 from helpers.datatables import itemmaxs, itemnamesets, itemmins, bodyslotnames, enemymins, enemymaxs, pitemmins, pitemmaxs, pitemnames
 from random import choice, randrange
@@ -806,6 +812,8 @@ class Runner ():
         except:
             _nosave = True
             raise
+        if (_no_start):
+            return
         while True:
             inp = input("\x1b[2K> ")
             if (inp.startswith("help")):
@@ -881,11 +889,11 @@ class SaveLoader ():
     def _fileman (self, rw : bool = False, data : str = ""):
         with open(f"{self._sf_name}.{self._sf_ext}", ("w" if rw else "r")) as f:
             if (rw):
-                f.write(data)
+                f.write(encoder.encode(0xadfc, 1, data) if _use_encode else data)
             else:
                 lines = f.read()
         if (not rw):
-            return lines
+            return encoder.decode(lines) if _use_encode else lines
     ## save
     def save (self) -> None:
         if (_nosave):
