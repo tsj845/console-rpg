@@ -160,7 +160,7 @@ class DisplayManager ():
                 cwork[0] = cwork[0] + text
         if (cwork[0] != ""):
             ret.append(tuple(cwork))
-        print(ret)
+        # print(ret)
         return ret
     # creates a new line
     def addLine (self, text : str = "") -> None:
