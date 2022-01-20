@@ -78,7 +78,6 @@ class DisplayManager ():
         localx = 0
         lv = None
         for i in range(len(self.lines)):
-            # ind = len(self.lines) - i - 1
             ind = i
             line = self.lines[ind]
             v = self.labys[ind]
@@ -166,7 +165,6 @@ class DisplayManager ():
     # creates a new line
     def addLine (self, text : str = "") -> None:
         self.scroll_up(1)
-        # text = [(text, "#f0f0f0", "#222222", 0, False)]
         text = self._do_ansi(text)
         for item in text:
             l = Label(self.line_disp, text=item[0], font={(False,False):textfont,(False,True):italicfont,(True,False):boldfont,(True,True):bolditalicfont}[(item[3], item[4])])
@@ -226,5 +224,4 @@ class DisplayManager ():
         self.redraw_lines()
 
 dm = DisplayManager("testing - press ESC to quit")
-dm.locked = False
 dm.run()
