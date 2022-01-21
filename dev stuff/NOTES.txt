@@ -2,3 +2,5 @@
 
 -- player resting probably also needs to be overhaulec
 -- in the future may want to remove stamina as a naturally occuring item stat for random items
+
+-- input and full ansi support need to be completed in window.py before use
