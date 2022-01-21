@@ -6,13 +6,14 @@ import sys
 from typing import List, Any, Tuple
 import re
 
-ansire = re.compile("\x1b(\[?[^A-Za-z]*[A-Za-z]{1})")
+ansire = re.compile("\x1b(\[?[\d;]*[A-Za-z]{1})")
 
 boldings = {0:50, 1:87, 2:0}
 
 default_mono = gui.QFont("courier")
 default_foreground = "#f0f0f0"
 default_background = "#222222"
+default_cursor = "rgba(204, 204, 204, 0.5)"
 gxoff = 20
 gyoff = 20
 
@@ -22,19 +23,30 @@ class Text (widgets.QLabel):
         font = gui.QFont(font.family(), weight=boldings[bold], italic=italic)
         super().__init__(text, parent)
         self.show()
-        # self._w = self.frameGeometry().width()
         self._w = len(text) * rp.fwidth
         self.setMinimumWidth(self._w)
         self.setMaximumWidth(self._w)
-        self._text = text
+        self._textv = text
         self.setFont(font)
         self.adjustSize()
         self.setStyleSheet(f"* {'{'}background:{background};color:{color}{'}'}")
         self._y = 0
         self._x = x
+        self._xval = 0
+        self._yval = 0
         self._parent = rp
-        self.y = y
-        # self.x = x
+        self.y = y+1
+    @property
+    def _text (self) -> str:
+        return self._textv
+    @_text.setter
+    def _text (self, value : str) -> None:
+        self._textv = value
+        self._w = len(value) * self._parent.fwidth
+        self.setMinimumWidth(self._w)
+        self.setMaximumWidth(self._w)
+        self.setText(value)
+        self.move(self._xval, self._yval)
     @property
     def height (self) -> int:
         return self.geometry().height()
@@ -45,19 +57,11 @@ class Text (widgets.QLabel):
     def y (self, value : int) -> None:
         self._y = value
         self.update_y()
-    # @property
-    # def x (self) -> int:
-    #     return self._x
-    # @x.setter
-    # def x (self, value : int) -> None:
-    #     self._x = value
-    #     self.update_x()
     def update_y (self) -> None:
         if (self._parent != None):
-            yval = (self._parent.height - ((self._y+1) * self.height)) - gyoff
-            xval = gxoff + (self._parent.fwidth * self._x)
-            print(xval, gxoff, self._x, self._parent.fwidth, self._text)
-            self.move(xval, yval)
+            self._yval = (self._parent.height - ((self._y+1) * self.height)) - gyoff
+            self._xval = gxoff + (self._parent.fwidth * self._x)
+            self.move(self._xval, self._yval)
 
 # display manager
 class Display (widgets.QWidget):
@@ -70,10 +74,36 @@ class Display (widgets.QWidget):
         self.setStyleSheet("QWidget#top {background:#222222} QPushButton {color:lime} QLabel, QWidget#top > QWidget {color:white;background:transparent} * {background:transparent}")
         self.game = game
         self.lines : List[Text] = []
+        self._linebuf : List[str] = []
+        self._cp = 0
         self._locked = True
         self.fwidth = 0
         self.calc_fwidth()
+        self.input_line : Text = Text("HELLOW?", self, self, y=-1)
+        self.cursor : Text = Text(" ", self, self, y=-1, x=2, background=default_cursor)
+        self._prefix = ""
+        self._histind = 0
+        self._hist : List[str] = []
         self.booting = False
+    def hist (self, dir : int = 0) -> None:
+        if (dir > 0):
+            if (self._histind >= len(self._hist)):
+                return
+        elif (dir < 0):
+            if (self._histind < 1):
+                return
+        self._histind += dir
+        self._linebuf = list(self._hist[self._histind])
+        self._cp = len(self._linebuf)
+        self.update_input_line()
+    @property
+    def cp (self) -> int:
+        return self._cp
+    @cp.setter
+    def cp (self, value : int) -> None:
+        self._cp = value
+        self.cursor._x = self._cp + len(self.prefix)
+        self.cursor.update_y()
     def calc_fwidth (self) -> None:
         t = widgets.QLabel("x", self)
         t.setFont(default_mono)
@@ -85,6 +115,13 @@ class Display (widgets.QWidget):
             return
         for l in self.lines:
             l.update_y()
+    @property
+    def prefix (self) -> str:
+        return self._prefix
+    @prefix.setter
+    def prefix (self, value : str) -> None:
+        self._prefix = value
+        self.update_input_line()
     @property
     def height (self) -> int:
         return self.geometry().height()
@@ -105,8 +142,9 @@ class Display (widgets.QWidget):
         for item in text.split("\n"):
             self.add_line(item)
     def _do_ansi (self, text : str) -> List[Tuple[str, str, str, int, bool]]:
-        # texts = text.split("\x1b")
+        print(text)
         texts = re.split(ansire, text)
+        print(text)
         ret = []
         # text, foreground, background, brightness, italics
         default = ["", default_foreground, default_background, 0, False]
@@ -126,6 +164,7 @@ class Display (widgets.QWidget):
                 bc = ("0" if len(bc) == 1 else "") + bc
                 return f"#{rc}{gc}{bc}"
         def parse_ansi (text : str) -> Tuple[int, Any]:
+            print(text)
             # graphics
             if (text[-1] == "m"):
                 bolds = ("[22m", "[1m", "[2m")
@@ -136,8 +175,10 @@ class Display (widgets.QWidget):
             # don't care about empty text
             if (text == ""):
                 continue
+            x = re.findall("[A-Za-z]{1}", text)
             # if it's an ansi code
-            if (len(re.findall("[A-Za-z]{1}", text)) == 1):
+            if (len(x) == 1):
+                print(x)
                 # cwork isn't empty so add it to ret
                 if (cwork[0] != ""):
                     ret.append(tuple(cwork.copy()))
@@ -153,57 +194,81 @@ class Display (widgets.QWidget):
                 cwork[0] = cwork[0] + text
         if (cwork[0] != ""):
             ret.append(tuple(cwork))
-        # print(ret)
         return ret
     # adds a line
     def add_line (self, text : str) -> None:
-        # self.scroll_up(1)
         for l in self.lines:
             l.y += 1
         text = self._do_ansi(text)
-        print(text)
         lx = 0
         for item in text:
             w = Text(item[0], self, rp=self, y=0, color=item[1], background=item[2], bold=item[3], italic=item[4], x=lx)
             lx += len(item[0])
             self.lines.append(w)
         self.redraw_lines()
+    # updates the input line
+    def update_input_line (self) -> None:
+        self.calc_fwidth()
+        v = self._prefix + "".join(self._linebuf)
+        self.input_line._text = v
     # adds a character to input
-    def type_char (self, text : str) -> None:
-        pass
+    def type_char (self, char : str) -> None:
+        self._linebuf.insert(self.cp, char)
+        self.cp += 1
+        self.update_input_line()
     # deletes a character from input
     def del_char (self) -> None:
-        pass
+        if (self.cp > 0):
+            self.cp -= 1
+            self._linebuf.pop(self.cp)
+            self.update_input_line()
+    # moves the cursor one to the right
+    def move_right (self) -> None:
+        if (self.cp < len(self._linebuf)):
+            self.cp += 1
+    # moves the cursor one to the left
+    def move_left (self) -> None:
+        if (self.cp > 0):
+            self.cp -= 1
+    def send_input (self) -> None:
+        if (not self._locked):
+            lin = "".join(self._linebuf)
+            self._hist.append(lin)
+            self._histind = len(self._hist)
+            self.write(self._prefix + lin)
+            self._linebuf = []
+            self.cp = 0
+            self.update_input_line()
     # handles key presses
     def keyPressEvent (self, ev : gui.QKeyEvent) -> None:
         key, text = ev.key(), ev.text()
         if (key == Qt.Key_Space):
-            print("space")
+            self.type_char(" ")
         elif (key in (Qt.Key_Return, Qt.Key_Enter)):
-            self.write("new line")
+            self.send_input()
         # escape quits the program
         elif (key == Qt.Key_Escape):
             sys.exit()
         elif (key in (Qt.Key_Backspace, Qt.Key_Delete)):
             self.del_char()
         elif (key == Qt.Key_Shift):
-            print("shift")
+            pass
         elif (key == Qt.Key_Meta):
-            print("meta")
+            pass
         elif (key == Qt.Key_Control):
-            print("control")
+            pass
         elif (key == Qt.Key_Alt):
-            print("alt")
+            pass
         elif (key == Qt.Key_CapsLock):
             pass
         elif (key == Qt.Key_Up):
-            print("ArrowUp")
+            self.hist(-1)
         elif (key == Qt.Key_Down):
-            print("ArrowDown")
+            self.hist(1)
         elif (key == Qt.Key_Right):
-            print("ArrowRight")
+            self.move_right()
         elif (key == Qt.Key_Left):
-            print("ArrowLeft")
+            self.move_left()
         else:
             self.type_char(text)
     # handles resizing
@@ -226,6 +291,8 @@ def start (game) -> None:
     # display.write("just y")
     display.write("\x1b[38;2;0;50;0m\x1b[48;2;0;255;0mGREN\x1b[0mnormie text")
     display.write("\x1b[2mfaint \x1b[1mbold \x1b[22m\x1b[3mnormal italics\x1b[0m")
+    display.locked = False
+    # display.prefix = "> "
 
     sys.exit(app.exec())
 
