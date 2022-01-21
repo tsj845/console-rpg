@@ -6,7 +6,7 @@ import sys
 from typing import List, Any, Tuple
 import re
 
-ansire = re.compile("\x1b(\[?[\d;]*[A-Za-z]{1})")
+ansire = re.compile("\x1b(\[?[\d;]+[A-Za-z]{1})")
 
 boldings = {0:50, 1:87, 2:0}
 
@@ -142,9 +142,7 @@ class Display (widgets.QWidget):
         for item in text.split("\n"):
             self.add_line(item)
     def _do_ansi (self, text : str) -> List[Tuple[str, str, str, int, bool]]:
-        print(text)
         texts = re.split(ansire, text)
-        print(text)
         ret = []
         # text, foreground, background, brightness, italics
         default = ["", default_foreground, default_background, 0, False]
@@ -164,7 +162,6 @@ class Display (widgets.QWidget):
                 bc = ("0" if len(bc) == 1 else "") + bc
                 return f"#{rc}{gc}{bc}"
         def parse_ansi (text : str) -> Tuple[int, Any]:
-            print(text)
             # graphics
             if (text[-1] == "m"):
                 bolds = ("[22m", "[1m", "[2m")
@@ -175,10 +172,9 @@ class Display (widgets.QWidget):
             # don't care about empty text
             if (text == ""):
                 continue
-            x = re.findall("[A-Za-z]{1}", text)
+            x = re.findall("\[[\d;]+[A-Za-z]{1}", text)
             # if it's an ansi code
             if (len(x) == 1):
-                print(x)
                 # cwork isn't empty so add it to ret
                 if (cwork[0] != ""):
                     ret.append(tuple(cwork.copy()))
@@ -292,7 +288,7 @@ def start (game) -> None:
     display.write("\x1b[38;2;0;50;0m\x1b[48;2;0;255;0mGREN\x1b[0mnormie text")
     display.write("\x1b[2mfaint \x1b[1mbold \x1b[22m\x1b[3mnormal italics\x1b[0m")
     display.locked = False
-    # display.prefix = "> "
+    display.prefix = "> "
 
     sys.exit(app.exec())
 
