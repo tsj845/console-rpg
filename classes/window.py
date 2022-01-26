@@ -1,3 +1,4 @@
+from math import floor
 import PyQt5.QtCore as qt
 import PyQt5.QtWidgets as widgets
 import PyQt5.QtGui as gui
@@ -78,6 +79,7 @@ class Display (widgets.QWidget):
         self._cp = 0
         self._locked = True
         self.fwidth = 0
+        self.fheight = 0
         self.calc_fwidth()
         self.input_line : Text = Text("HELLOW?", self, self, y=-1)
         self.cursor : Text = Text(" ", self, self, y=-1, x=2, background=default_cursor)
@@ -85,6 +87,8 @@ class Display (widgets.QWidget):
         self._histind = 0
         self._hist : List[str] = []
         self.booting = False
+    def terminate (self) -> None:
+        sys.exit()
     def hist (self, dir : int = 0) -> None:
         if (dir > 0):
             if (self._histind >= len(self._hist)):
@@ -109,6 +113,7 @@ class Display (widgets.QWidget):
         t.setFont(default_mono)
         t.show()
         self.fwidth = t.frameGeometry().width()
+        self.fheight = t.frameGeometry().height()
         t.setParent(None)
     def redraw_lines (self) -> None:
         if (self.booting):
@@ -235,6 +240,7 @@ class Display (widgets.QWidget):
             self._linebuf = []
             self.cp = 0
             self.update_input_line()
+            self.game.main_input(lin)
     # handles key presses
     def keyPressEvent (self, ev : gui.QKeyEvent) -> None:
         key, text = ev.key(), ev.text()
@@ -274,8 +280,36 @@ class Display (widgets.QWidget):
         self.calc_fwidth()
         self.redraw_lines()
 
+class Char ():
+    def __init__ (self, char : str, fg : str, bg : str, bold : int, italic : bool):
+        pass
+
+# manages everything
+class Terminal ():
+    def __init__ (self, out : Display) -> None:
+        self.out : Display = out
+        self.lines : List[List[str]] = []
+        self.x = 0
+        self.y = 0
+        self.mwidth = 0
+        self.mheight = 0
+        self.recalc()
+    def recalc (self) -> None:
+        self.mwidth = floor(self.out.geometry().width() / self.out.fwidth)
+        self.mheight = floor(self.out.geometry().height() / self.out.fheight)
+    def wchar (self, char : Char) -> None:
+        pass
+    def write (self, text : str) -> None:
+        self.out.write(text)
+    def grab (self, count : int) -> List[str]:
+        lst : List[str] = []
+        return lst
+
+terminal = None
+
 # starts the output
 def start (game) -> None:
+    global terminal
     app = widgets.QApplication([])
 
     display = Display(game=game)
@@ -285,11 +319,11 @@ def start (game) -> None:
     # display.write("cast 1\nNBHS")
     # display.write("justly")
     # display.write("just y")
-    display.write("\x1b[38;2;0;50;0m\x1b[48;2;0;255;0mGREN\x1b[0mnormie text")
-    display.write("\x1b[2mfaint \x1b[1mbold \x1b[22m\x1b[3mnormal italics\x1b[0m")
+    # display.write("\x1b[38;2;0;50;0m\x1b[48;2;0;255;0mGREN\x1b[0mnormie text")
+    # display.write("\x1b[2mfaint \x1b[1mbold \x1b[22m\x1b[3mnormal italics\x1b[0m")
     display.locked = False
     display.prefix = "> "
 
-    sys.exit(app.exec())
+    terminal = Terminal(display)
 
-start(None)
+    sys.exit(app.exec())

@@ -3,7 +3,6 @@ _dev = True
 import os
 import sys
 import readline
-import atexit
 from typing import Dict, List, Tuple, Union, Any
 import json
 from classes.ansi import ANSI
@@ -52,12 +51,18 @@ from math import ceil, floor
 from time import sleep
 from helpers.parsers import nqs
 import json
+import atexit
 
 globalindent = 0
+win_disp_out = None
 
 def _game_print (*args, sep : str= " ", end : str = "\n", flush : bool = False) -> None:
-    print("\x1b[2K" + ("    " * globalindent), end="")
-    print(*args, sep=sep, end=end, flush=flush)
+    # print("\x1b[2K" + ("    " * globalindent), end="")
+    # print(*args, sep=sep, end=end, flush=flush)
+    args = list(args)
+    for i in range(len(args)):
+        args[i] = str(args[i])
+    win_disp_out.write(sep.join(args))
 
 def _run_teach () -> None:
     with open("story/story-outline.txt") as file:
@@ -811,56 +816,55 @@ class Runner ():
             raise
         if (_no_start):
             return
-        while True:
-            inp = input("\x1b[2K> ")
-            if (inp.startswith("help")):
-                with open("help_text.json") as file:
-                    help_text = json.loads(file.read())
+    ## main input
+    def main_input (self, inp : str) -> None:
+        global _nosave
+        if (inp.startswith("help")):
+            with open("help_text.json") as file:
+                help_text = json.loads(file.read())
 
-                t = inp.split(" ")
-                length = len(t)
-                def f (s : str) -> str:
-                    return Exprs.rep_colors(s)
-                if length == 1:
-                    _game_print(f(f"{ANSI.help_green}type help [category] for the list of all its commands{ANSI.reset}\n{help_text['help']}"))
-                
-                elif t[1] in help_text.keys():
-                    help_t = help_text[t[1]]
-                    if length == 3:
-                        if t[2] in help_t["cmds"].keys():
-                            _game_print(f(help_t["cmds"][t[2]]))
-                        else:
-                            _game_print(f(f"{ANSI.help_red}'{t[2]}' does not exist or is not implemented{ANSI.reset}"))
+            t = inp.split(" ")
+            length = len(t)
+            def f (s : str) -> str:
+                return Exprs.rep_colors(s)
+            if length == 1:
+                _game_print(f(f"{ANSI.help_green}type help [category] for the list of all its commands{ANSI.reset}\n{help_text['help']}"))
+            
+            elif t[1] in help_text.keys():
+                help_t = help_text[t[1]]
+                if length == 3:
+                    if t[2] in help_t["cmds"].keys():
+                        _game_print(f(help_t["cmds"][t[2]]))
                     else:
-                        _game_print(f(f"{ANSI.help_green}for more info on a command type help {t[1]} [command]{ANSI.reset}\n{help_t['list']}"))
-                
+                        _game_print(f(f"{ANSI.help_red}'{t[2]}' does not exist or is not implemented{ANSI.reset}"))
                 else:
-                    _game_print(f(f"{ANSI.help_red}'{t[1]}' is not a category{ANSI.reset}"))
-
-            elif (inp == "save"):
-                if (_mansave):
-                    _nosave = False
-                SaveLoader.save()
-                if (_mansave):
-                    _nosave = True
-            elif (inp == "load"):
-                if (_dev):
-                    SaveLoader.load()
-            elif (inp == "quit"):
-                if (_dev):
-                    break
-                if (input("type \"yes\" to confirm: ") != "yes"):
-                    continue
-                SaveLoader.save()
-                break
-            elif (inp == "inspect" and _dev):
-                self._inspect()
+                    _game_print(f(f"{ANSI.help_green}for more info on a command type help {t[1]} [command]{ANSI.reset}\n{help_t['list']}"))
+            
             else:
-                self.parse_input(inp)
-            self._empty_queue()
-            if (self.gameover):
-                self.lostgame()
-                break
+                _game_print(f(f"{ANSI.help_red}'{t[1]}' is not a category{ANSI.reset}"))
+
+        elif (inp == "save"):
+            if (_mansave):
+                _nosave = False
+            SaveLoader.save()
+            if (_mansave):
+                _nosave = True
+        elif (inp == "load"):
+            if (_dev):
+                SaveLoader.load()
+        elif (inp == "quit"):
+            if (not _dev and input("type \"yes\" to confirm: ") != "yes"):
+                return
+            win_disp_out.terminate()
+            SaveLoader.save()
+        elif (inp == "inspect" and _dev):
+            self._inspect()
+        else:
+            self.parse_input(inp)
+        self._empty_queue()
+        if (self.gameover):
+            self.lostgame()
+            win_disp_out.terminate()
 
 game = Runner()
 
@@ -1087,7 +1091,10 @@ class SaveLoader ():
             self._parseblock(block)
         return False
 
-
 SaveLoader = SaveLoader()
+
+def boot (display) -> None:
+    global win_disp_out
+    win_disp_out = display
 
 atexit.register(SaveLoader.save)
