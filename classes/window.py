@@ -294,6 +294,8 @@ class Terminal ():
         self.mwidth = 0
         self.mheight = 0
         self.recalc()
+    def terminate (self) -> None:
+        self.out.terminate()
     def recalc (self) -> None:
         self.mwidth = floor(self.out.geometry().width() / self.out.fwidth)
         self.mheight = floor(self.out.geometry().height() / self.out.fheight)

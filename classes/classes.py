@@ -114,6 +114,7 @@ class Runner ():
         self.listen(self.questmanager.event)
         self._queue : List[Tuple[str, list]] = []
         self.__initfile = False
+        self.quitflag = False
     ## reward
     def reward (self, reward : dict, indent : int = 0) -> None:
         global globalindent
@@ -816,20 +817,28 @@ class Runner ():
             raise
         if (_no_start):
             return
+    def quit (self) -> None:
+        win_disp_out.terminate()
+        SaveLoader.save()
     ## main input
     def main_input (self, inp : str) -> None:
         global _nosave
+        if (self.quitflag):
+            if (inp == "yes"):
+                self.quit()
+                return
+            else:
+                self.quitflag = False
+                return
         if (inp.startswith("help")):
             with open("help_text.json") as file:
                 help_text = json.loads(file.read())
-
             t = inp.split(" ")
             length = len(t)
             def f (s : str) -> str:
                 return Exprs.rep_colors(s)
             if length == 1:
                 _game_print(f(f"{ANSI.help_green}type help [category] for the list of all its commands{ANSI.reset}\n{help_text['help']}"))
-            
             elif t[1] in help_text.keys():
                 help_t = help_text[t[1]]
                 if length == 3:
@@ -839,10 +848,8 @@ class Runner ():
                         _game_print(f(f"{ANSI.help_red}'{t[2]}' does not exist or is not implemented{ANSI.reset}"))
                 else:
                     _game_print(f(f"{ANSI.help_green}for more info on a command type help {t[1]} [command]{ANSI.reset}\n{help_t['list']}"))
-            
             else:
                 _game_print(f(f"{ANSI.help_red}'{t[1]}' is not a category{ANSI.reset}"))
-
         elif (inp == "save"):
             if (_mansave):
                 _nosave = False
@@ -853,10 +860,11 @@ class Runner ():
             if (_dev):
                 SaveLoader.load()
         elif (inp == "quit"):
-            if (not _dev and input("type \"yes\" to confirm: ") != "yes"):
+            if (not _dev):
+                self.quitflag = True
+                win_disp_out.out.write("are you sure you want to quit?")
                 return
-            win_disp_out.terminate()
-            SaveLoader.save()
+            self.quit()
         elif (inp == "inspect" and _dev):
             self._inspect()
         else:
