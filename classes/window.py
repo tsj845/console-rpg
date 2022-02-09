@@ -100,6 +100,13 @@ class Display (widgets.QWidget):
         self._linebuf = list(self._hist[self._histind])
         self._cp = len(self._linebuf)
         self.update_input_line()
+    def delete_lines (self, n=1):
+        for i in range(n):
+            if (len(self.lines) <= 0):
+                break
+            l = self.lines[-1]
+            l.destroy()
+            self.lines.pop()
     @property
     def cp (self) -> int:
         return self._cp
@@ -177,7 +184,7 @@ class Display (widgets.QWidget):
             # don't care about empty text
             if (text == ""):
                 continue
-            x = re.findall("\[[\d;]+[A-Za-z]{1}", text)
+            x = re.findall("\[[\d;]+m{1}", text)
             # if it's an ansi code
             if (len(x) == 1):
                 # cwork isn't empty so add it to ret
